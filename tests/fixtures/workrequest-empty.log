@@ -1,0 +1,19 @@
+
+Error: Work Request error 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service:  
+Error Message: Work Request error 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Instance 
+Error Message: work request did not succeed, workId: ocid1.coreservicesworkrequest.oc1.ap-sydney-1.abzxsljrq4c7m2n5v8x1b3d6f9h2k5m8p1r4t7w0y3a6c9e2g5, entity: instance, action: CREATED. Message:  
+Resource OCID: ocid1.instance.oc1.ap-sydney-1.anzxsljrw7y2c5e8g1j4l7n0q3s6u9x2z5b8d1f4h7k0m3p6r9 
+Suggestion: Please retry or contact support for help with service: Core Instance
+ 
+Resource OCID:  
+Suggestion: Please retry or contact support for help with service: 
+
+
+  with oci_core_instance.a1,
+  on main.tf line 1, in resource "oci_core_instance" "a1":
+   1: resource "oci_core_instance" "a1" {
+

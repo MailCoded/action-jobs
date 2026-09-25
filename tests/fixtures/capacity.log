@@ -1,0 +1,16 @@
+
+Error: 500-InternalError, Out of host capacity.
+Suggestion: The service for this resource encountered an error. Please contact support for help with service: Core Instance
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.ap-sydney-1.oraclecloud.com/20160918/instances 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: 3f1c0b8e2a4d4c7e9b6a5d4c3b2a1f0e/8A1B2C3D4E5F60718293A4B5C6D7E8F9/0F1E2D3C4B5A69788796A5B4C3D2E1F0 
+
+
+  with oci_core_instance.a1,
+  on main.tf line 1, in resource "oci_core_instance" "a1":
+   1: resource "oci_core_instance" "a1" {
+

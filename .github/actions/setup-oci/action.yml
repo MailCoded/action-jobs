@@ -1,0 +1,61 @@
+name: setup-oci
+description: Validate the OCI API key secrets, write ~/.oci/config, install a pinned OCI CLI and verify that OCI accepts the credentials.
+
+inputs:
+  tenancy-ocid:
+    description: Tenancy OCID (secret OCI_TENANCY_OCID).
+    required: true
+  user-ocid:
+    description: OCID of the automation user (secret OCI_USER_OCID).
+    required: true
+  fingerprint:
+    description: Fingerprint of the user's API signing key (secret OCI_FINGERPRINT).
+    required: true
+  private-key:
+    description: API signing key PEM including the BEGIN and END lines (secret OCI_PRIVATE_KEY).
+    required: true
+  region:
+    description: OCI region. Always Free A1 needs the tenancy's home region.
+    required: false
+    default: "ap-sydney-1"
+  oci-cli-version:
+    description: Exact OCI CLI version to install.
+    required: false
+    default: "3.94.0"
+
+runs:
+  using: composite
+  steps:
+    - name: Validate secrets and write the OCI config
+      shell: bash
+      env:
+        OCI_TENANCY_OCID: ${{ inputs.tenancy-ocid }}
+        OCI_USER_OCID: ${{ inputs.user-ocid }}
+        OCI_FINGERPRINT: ${{ inputs.fingerprint }}
+        OCI_PRIVATE_KEY: ${{ inputs.private-key }}
+        OCI_REGION: ${{ inputs.region }}
+      run: '"$GITHUB_ACTION_PATH/setup-oci.sh" configure'
+
+    - name: Check for pipx
+      id: detect
+      shell: bash
+      run: '"$GITHUB_ACTION_PATH/install-oci-cli.sh" detect'
+
+    - name: Set up Python (only when pipx is missing)
+      if: steps.detect.outputs.pipx != 'true'
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      with:
+        python-version: "3.12"
+
+    - name: Install the OCI CLI
+      shell: bash
+      env:
+        CLI_VERSION: ${{ inputs.oci-cli-version }}
+      run: '"$GITHUB_ACTION_PATH/install-oci-cli.sh" install'
+
+    - name: Verify OCI authentication
+      shell: bash
+      env:
+        OCI_TENANCY_OCID: ${{ inputs.tenancy-ocid }}
+        OCI_REGION: ${{ inputs.region }}
+      run: '"$GITHUB_ACTION_PATH/setup-oci.sh" probe'

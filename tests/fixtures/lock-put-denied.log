@@ -1,0 +1,49 @@
+
+Error: Error acquiring the state lock
+
+Error message: Error returned by ObjectStorage Service. Http Status Code:
+404. Error Code: BucketNotFound. Opc request id:
+syd-1:Tk9uQ29udGVudGlvbi0wMDAx. Message: Either the bucket named
+'freebie-hub-tfstate' does not exist in the namespace 'axaxnpcrorw5' or you
+are not authorized to access it
+Operation Name: PutObject
+Timestamp: 2026-09-25 02:48:56 +0000 GMT
+Client Version: Oracle-GoSDK/65.89.1
+Request Endpoint: PUT
+https://objectstorage.ap-sydney-1.oraclecloud.com/n/axaxnpcrorw5/b/freebie-hub-tfstate/o/oracle-a1/terraform.tfstate.lock
+Troubleshooting Tips: See
+https://docs.oracle.com/iaas/Content/API/References/apierrors.htm#apierrors_404__404_bucketnotfound
+for more information about resolving this error.
+Also see
+https://docs.oracle.com/iaas/api/#/en/objectstorage/20160918/Object/PutObject
+for details on this operation's requirements.
+To get more info on the failing request, you can set OCI_GO_SDK_DEBUG env var
+to info or higher level to log the request/response details.
+If you are unable to resolve this ObjectStorage issue, please contact Oracle
+support and provide them this full error message.
+failed to get existing lock file: Error returned by ObjectStorage Service.
+Http Status Code: 404. Error Code: BucketNotFound. Opc request id:
+syd-1:Tk9uQ29udGVudGlvbi0wMDAy. Message: Either the bucket named
+'freebie-hub-tfstate' does not exist in the namespace 'axaxnpcrorw5' or you
+are not authorized to access it
+Operation Name: GetObject
+Timestamp: 2026-09-25 02:48:56 +0000 GMT
+Client Version: Oracle-GoSDK/65.89.1
+Request Endpoint: GET
+https://objectstorage.ap-sydney-1.oraclecloud.com/n/axaxnpcrorw5/b/freebie-hub-tfstate/o/oracle-a1/terraform.tfstate.lock
+Troubleshooting Tips: See
+https://docs.oracle.com/iaas/Content/API/References/apierrors.htm#apierrors_404__404_bucketnotfound
+for more information about resolving this error.
+Also see
+https://docs.oracle.com/iaas/api/#/en/objectstorage/20160918/Object/GetObject
+for details on this operation's requirements.
+To get more info on the failing request, you can set OCI_GO_SDK_DEBUG env var
+to info or higher level to log the request/response details.
+If you are unable to resolve this ObjectStorage issue, please contact Oracle
+support and provide them this full error message.
+
+Terraform acquires a state lock to protect the state from being written
+by multiple users at the same time. Please resolve the issue above and try
+again. For most commands, you can disable locking with the "-lock=false"
+flag, but this is not recommended.
+

@@ -1,0 +1,14 @@
+ServiceError:
+{
+    "client_version": "Oracle-PythonSDK/2.187.0, Oracle-PythonCLI/3.94.0",
+    "code": "NotAuthorizedOrNotFound",
+    "logging_tips": "Please run the OCI CLI command using --debug flag to find more debug information.",
+    "message": "Authorization failed or requested resource not found.",
+    "opc-request-id": "A1B3C5D7E9F14A3B5C7D9E1F3A5B7C9D/1E3F5A7B9C1D3E5F7A9B1C3D5E7F9A1B/3C5D7E9F1A3B5C7D9E1F3A5B7C9D1E3F",
+    "operation_name": "create_compute_capacity_report",
+    "request_endpoint": "POST https://iaas.ap-sydney-1.oraclecloud.com/20160918/computeCapacityReports",
+    "status": 404,
+    "target_service": "compute",
+    "timestamp": "2026-09-25T03:06:42.118530+00:00",
+    "troubleshooting_tips": "See [https://docs.oracle.com/iaas/Content/API/References/apierrors.htm] for more information about resolving this error. If you are unable to resolve this issue, run this CLI command with --debug option and contact Oracle support and provide them the full error message."
+}

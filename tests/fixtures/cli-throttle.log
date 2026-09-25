@@ -1,0 +1,14 @@
+TransientServiceError:
+{
+    "client_version": "Oracle-PythonSDK/2.187.0, Oracle-PythonCLI/3.94.0",
+    "code": "TooManyRequests",
+    "logging_tips": "Please run the OCI CLI command using --debug flag to find more debug information.",
+    "message": "Too many requests for the user",
+    "opc-request-id": "2C4E6A8B0D1F43A5B7C9E1F3A5B7C9D1/E3F5A7B9C1D3E5F7A9B1C3D5E7F9A1B3/C5D7E9F1A3B5C7D9E1F3A5B7C9D1E3F5",
+    "operation_name": "list_availability_domains",
+    "request_endpoint": "GET https://identity.ap-sydney-1.oci.oraclecloud.com/20160918/availabilityDomains",
+    "status": 429,
+    "target_service": "identity",
+    "timestamp": "2026-09-25T02:52:39.793917+00:00",
+    "troubleshooting_tips": "See [https://docs.oracle.com/iaas/Content/API/References/apierrors.htm] for more information about resolving this error. If you are unable to resolve this issue, run this CLI command with --debug option and contact Oracle support and provide them the full error message."
+}

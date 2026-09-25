@@ -1,0 +1,16 @@
+
+Error: 429-TooManyRequests, Too many requests for the user
+Suggestion: Please re-apply your Terraform config and/or increase the retry timeout using this document: https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformtroubleshooting.htm#common_issues__automaticretries
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.ap-sydney-1.oraclecloud.com/20160918/instances 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: 5a4b3c2d1e0f4a9b8c7d6e5f4a3b2c1d/0A1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D/6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B 
+
+
+  with oci_core_instance.a1,
+  on main.tf line 1, in resource "oci_core_instance" "a1":
+   1: resource "oci_core_instance" "a1" {
+

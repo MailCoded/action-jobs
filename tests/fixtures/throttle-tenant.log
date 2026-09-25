@@ -1,0 +1,16 @@
+
+Error: 429-TooManyRequests, Too many requests for the tenant
+Suggestion: Please re-apply your Terraform config and/or increase the retry timeout using this document: https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformtroubleshooting.htm#common_issues__automaticretries
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/data-sources/core_images 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Image/ListImages 
+Request Target: GET https://iaas.ap-sydney-1.oraclecloud.com/20160918/images?compartmentId=ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6&operatingSystem=Canonical%20Ubuntu&operatingSystemVersion=24.04&shape=VM.Standard.A1.Flex&sortBy=TIMECREATED&sortOrder=DESC&lifecycleState=AVAILABLE 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Images 
+Operation Name: ListImages 
+OPC request ID: e1f2a3b4c5d64e7f8a9b0c1d2e3f4a5b/C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F1/A2B3C4D5E6F708192A3B4C5D6E7F8091 
+
+
+  with data.oci_core_images.arm,
+  on data.tf line 12, in data "oci_core_images" "arm":
+  12: data "oci_core_images" "arm" {
+

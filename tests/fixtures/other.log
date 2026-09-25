@@ -1,0 +1,16 @@
+
+Error: 400-InvalidParameter, Invalid subnetId
+Suggestion: Please update the parameter(s) in the Terraform config as per error message Invalid subnetId
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.ap-sydney-1.oraclecloud.com/20160918/instances 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: 9a8b7c6d5e4f4a3b2c1d0e9f8a7b6c5d/4E3F2A1B0C9D8E7F6A5B4C3D2E1F0A9B/8C7D6E5F4A3B2C1D0E9F8A7B6C5D4E3F 
+
+
+  with oci_core_instance.a1,
+  on main.tf line 1, in resource "oci_core_instance" "a1":
+   1: resource "oci_core_instance" "a1" {
+

@@ -1,0 +1,168 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  terraform:
+    name: terraform fmt and validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_DIR: modules/oracle-a1/terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "1.16.4"
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      - name: terraform init (no backend)
+        run: terraform -chdir="$TF_DIR" init -backend=false -lockfile=readonly -input=false
+
+      - name: terraform validate
+        run: terraform -chdir="$TF_DIR" validate
+
+      - name: Check the lock file covers all three platforms
+        run: |
+          # -lockfile=readonly only warns about missing per-platform hashes.
+          count="$(grep -c '"h1:' "$TF_DIR/.terraform.lock.hcl" || true)"
+          if ((count < 3)); then
+            echo "::error file=$TF_DIR/.terraform.lock.hcl::expected h1: hashes for linux_amd64, linux_arm64 and darwin_arm64 (found ${count}); regenerate with terraform providers lock -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_arm64"
+            exit 1
+          fi
+
+      - name: Check retries.json shape
+        run: |
+          # Budgets stay below the caps because the provider's last backoff can overshoot by 5 % + 1 s.
+          if ! jq -e '
+            type == "object"
+            and has("409") and has("429") and has("500")
+            and all(to_entries[];
+              (.key | test("^[1-5][0-9][0-9]$"))
+              and (.value | type == "object")
+              and ((.value | keys) - ["retry_max_duration", "first_retry_sleep_duration"] | length == 0)
+              and (.value | has("retry_max_duration"))
+              and all(.value[]; type == "number" and . == floor and . > 0)
+              and (.value.first_retry_sleep_duration // 0) <= .value.retry_max_duration
+              and .value.retry_max_duration <= (if .key == "500" then 56 else 170 end))
+          ' "$TF_DIR/retries.json" >/dev/null; then
+            echo "::error file=$TF_DIR/retries.json::retries.json must map status codes (including 409, 429, 500) to objects with only integer retry_max_duration / first_retry_sleep_duration seconds; retry_max_duration <= 56 for 500 and <= 170 otherwise."
+            exit 1
+          fi
+          echo "retries.json OK"
+
+  lint:
+    name: shellcheck and actionlint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SHELLCHECK_VERSION: "0.11.0"
+      SHELLCHECK_SHA256: "8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198"
+      ACTIONLINT_VERSION: "1.7.12"
+      ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install ShellCheck and actionlint (pinned, sha256-verified)
+        run: |
+          bin="$RUNNER_TEMP/bin"
+          mkdir -p "$bin"
+
+          sc="$RUNNER_TEMP/shellcheck.tar.xz"
+          curl -fsSL --retry 3 -o "$sc" \
+            "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          echo "${SHELLCHECK_SHA256}  ${sc}" | sha256sum -c -
+          tar -xJf "$sc" -C "$bin" --strip-components=1 "shellcheck-v${SHELLCHECK_VERSION}/shellcheck"
+
+          al="$RUNNER_TEMP/actionlint.tar.gz"
+          curl -fsSL --retry 3 -o "$al" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  ${al}" | sha256sum -c -
+          tar -xzf "$al" -C "$bin" actionlint
+
+          echo "$bin" >> "$GITHUB_PATH"
+
+      - name: Tool versions
+        run: |
+          command -v shellcheck actionlint
+          shellcheck --version
+          actionlint --version
+
+      - name: ShellCheck
+        run: |
+          mapfile -d '' -t files < <(
+            find . \( -path ./oracle-a1-provisioner -o -path ./.git -o -name .terraform \) -prune \
+              -o -type f -name '*.sh' -print0 | sort -z
+          )
+          files+=(tests/shims/oci tests/shims/terraform)
+          while IFS= read -r -d '' f; do
+            case "$f" in
+              *.sh | tests/shims/oci | tests/shims/terraform) ;;
+              *)
+                if head -n 1 "$f" | grep -qE '^#!.*[/[:space:]](ba)?sh([[:space:]]|$)'; then
+                  files+=("$f")
+                fi
+                ;;
+            esac
+          done < <(find tests/shims -type f -print0 | sort -z)
+          printf '%s\n' "${files[@]}"
+          shellcheck -x "${files[@]}"
+
+      - name: actionlint
+        run: actionlint -color
+
+  test:
+    name: bats
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      BATS_TAG: "v1.14.0"
+      BATS_COMMIT: "eb7f42f8d608ac693d7a4b67474f6714ea68cfc5"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install bats-core (pinned tag, commit verified)
+        run: |
+          src="$RUNNER_TEMP/bats-core"
+          git clone --quiet --depth 1 --branch "$BATS_TAG" https://github.com/bats-core/bats-core "$src"
+          head="$(git -C "$src" rev-parse HEAD)"
+          if [[ "$head" != "$BATS_COMMIT" ]]; then
+            echo "::error::bats-core ${BATS_TAG} resolved to ${head}, expected ${BATS_COMMIT}."
+            exit 1
+          fi
+          "$src/install.sh" "$RUNNER_TEMP/bats"
+          echo "$RUNNER_TEMP/bats/bin" >> "$GITHUB_PATH"
+
+      - name: bats
+        run: |
+          bats --version
+          bats --print-output-on-failure tests/

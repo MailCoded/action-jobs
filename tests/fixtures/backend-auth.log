@@ -1,0 +1,11 @@
+
+Error: Error returned by ObjectStorage Service. Http Status Code: 401. Error Code: NotAuthenticated. Opc request id: syd-1:QmFja2VuZEF1dGgtMDAwMQ. Message: The required information to complete authentication was not provided or was incorrect.
+Operation Name: ListObjects
+Timestamp: 2026-09-25 02:48:56 +0000 GMT
+Client Version: Oracle-GoSDK/65.89.1
+Request Endpoint: GET https://objectstorage.ap-sydney-1.oraclecloud.com/n/axaxnpcrorw5/b/freebie-hub-tfstate/o?limit=1000&prefix=tf-state-env
+Troubleshooting Tips: See https://docs.oracle.com/iaas/Content/API/References/apierrors.htm#apierrors_401__401_notauthenticated for more information about resolving this error.
+Also see https://docs.oracle.com/iaas/api/#/en/objectstorage/20160918/ObjectSummary/ListObjects for details on this operation's requirements.
+To get more info on the failing request, you can set OCI_GO_SDK_DEBUG env var to info or higher level to log the request/response details.
+If you are unable to resolve this ObjectStorage issue, please contact Oracle support and provide them this full error message.
+

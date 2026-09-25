@@ -1,0 +1,16 @@
+
+Error: 401-NotAuthenticated, The required information to complete authentication was not provided or was incorrect.
+Suggestion: Please retry or contact support for help with service: Core Images
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/data-sources/core_images 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Image/ListImages 
+Request Target: GET https://iaas.ap-sydney-1.oraclecloud.com/20160918/images?compartmentId=ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6&operatingSystem=Canonical%20Ubuntu&operatingSystemVersion=24.04&shape=VM.Standard.A1.Flex&sortBy=TIMECREATED&sortOrder=DESC&lifecycleState=AVAILABLE 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Images 
+Operation Name: ListImages 
+OPC request ID: 88d518ab19bb4f40b52c83830e7eb0c2/36240E7AB2F7E90B51E3B56A53594424/7A69C2A1DF16296063426E5EEA8DF5AF 
+
+
+  with data.oci_core_images.arm,
+  on data.tf line 12, in data "oci_core_images" "arm":
+  12: data "oci_core_images" "arm" {
+

@@ -1,0 +1,292 @@
+Acquiring state lock. This may take a few moments...
+data.oci_core_images.arm: Reading...
+data.oci_core_images.arm: Read complete after 1s [id=CoreImagesDataSource-1873092012]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # oci_core_instance.a1 will be created
+  + resource "oci_core_instance" "a1" {
+      + availability_domain                 = "kIdk:AP-SYDNEY-1-AD-1"
+      + boot_volume_id                      = (known after apply)
+      + capacity_reservation_id             = (known after apply)
+      + compartment_id                      = "ocid1.compartment.oc1..aaaaaaaa401authq2m7x4v9c3b8n5k1j6h0g2f7d4s9a3"
+      + compute_cluster_id                  = (known after apply)
+      + dedicated_vm_host_id                = (known after apply)
+      + defined_tags                        = (known after apply)
+      + display_name                        = "authentication-proxy-a1"
+      + extended_metadata                   = (known after apply)
+      + fault_domain                        = (known after apply)
+      + freeform_tags                       = {
+          + "Hub"       = "freebie-hub"
+          + "ManagedBy" = "Terraform"
+          + "Module"    = "oracle-a1"
+          + "Purpose"   = "authentication gateway for the capacity dashboard"
+        }
+      + hostname_label                      = (known after apply)
+      + id                                  = (known after apply)
+      + image                               = (known after apply)
+      + instance_configuration_id           = (known after apply)
+      + ipxe_script                         = (known after apply)
+      + is_cross_numa_node                  = (known after apply)
+      + is_pv_encryption_in_transit_enabled = (known after apply)
+      + launch_mode                         = (known after apply)
+      + metadata                            = {
+          + "ssh_authorized_keys" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINoisyFixture401Key403Authentication429x noisy@example"
+        }
+      + private_ip                          = (known after apply)
+      + public_ip                           = (known after apply)
+      + region                              = (known after apply)
+      + shape                               = "VM.Standard.A1.Flex"
+      + state                               = (known after apply)
+      + subnet_id                           = (known after apply)
+      + system_tags                         = (known after apply)
+      + time_created                        = (known after apply)
+      + time_maintenance_reboot_due         = (known after apply)
+
+      + agent_config (known after apply)
+
+      + availability_config (known after apply)
+
+      + create_vnic_details {
+          + assign_ipv6ip             = false
+          + assign_private_dns_record = (known after apply)
+          + assign_public_ip          = "true"
+          + display_name              = (known after apply)
+          + hostname_label            = (known after apply)
+          + private_ip                = (known after apply)
+          + skip_source_dest_check    = (known after apply)
+          + subnet_id                 = (known after apply)
+          + vlan_id                   = (known after apply)
+        }
+
+      + instance_options (known after apply)
+
+      + launch_options (known after apply)
+
+      + platform_config (known after apply)
+
+      + preemptible_instance_config (known after apply)
+
+      + shape_config {
+          + baseline_ocpu_utilization     = (known after apply)
+          + gpu_description               = (known after apply)
+          + gpus                          = (known after apply)
+          + local_disk_description        = (known after apply)
+          + local_disks                   = (known after apply)
+          + local_disks_total_size_in_gbs = (known after apply)
+          + max_vnic_attachments          = (known after apply)
+          + memory_in_gbs                 = 12
+          + networking_bandwidth_in_gbps  = (known after apply)
+          + nvmes                         = (known after apply)
+          + ocpus                         = 2
+          + processor_description         = (known after apply)
+          + vcpus                         = (known after apply)
+        }
+
+      + source_details {
+          + boot_volume_size_in_gbs = "50"
+          + boot_volume_vpus_per_gb = (known after apply)
+          + source_id               = "ocid1.image.oc1.ap-sydney-1.aaaaaaaa401ytk2q429v7m3c8x5b1n6j0h4g9f2d7s3a5"
+          + source_type             = "image"
+        }
+
+      + timeouts {
+          + create = "10m"
+        }
+    }
+
+  # oci_core_internet_gateway.main[0] will be created
+  + resource "oci_core_internet_gateway" "main" {
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaa401authq2m7x4v9c3b8n5k1j6h0g2f7d4s9a3"
+      + defined_tags   = (known after apply)
+      + display_name   = "authentication-proxy-igw"
+      + enabled        = true
+      + freeform_tags  = {
+          + "Hub"       = "freebie-hub"
+          + "ManagedBy" = "Terraform"
+          + "Module"    = "oracle-a1"
+        }
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+      + vcn_id         = (known after apply)
+    }
+
+  # oci_core_route_table.public[0] will be created
+  + resource "oci_core_route_table" "public" {
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaa401authq2m7x4v9c3b8n5k1j6h0g2f7d4s9a3"
+      + defined_tags   = (known after apply)
+      + display_name   = "authentication-proxy-rt"
+      + freeform_tags  = {
+          + "Hub"       = "freebie-hub"
+          + "ManagedBy" = "Terraform"
+          + "Module"    = "oracle-a1"
+        }
+      + id             = (known after apply)
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+      + vcn_id         = (known after apply)
+
+      + route_rules {
+          + cidr_block        = (known after apply)
+          + description       = "default route; 401 and 403 responses from the authentication service stay inside"
+          + destination       = "0.0.0.0/0"
+          + destination_type  = "CIDR_BLOCK"
+          + network_entity_id = (known after apply)
+          + route_type        = (known after apply)
+        }
+    }
+
+  # oci_core_security_list.public[0] will be created
+  + resource "oci_core_security_list" "public" {
+      + compartment_id = "ocid1.compartment.oc1..aaaaaaaa401authq2m7x4v9c3b8n5k1j6h0g2f7d4s9a3"
+      + defined_tags   = (known after apply)
+      + display_name   = "authentication-proxy-sl"
+      + freeform_tags  = {
+          + "Hub"       = "freebie-hub"
+          + "ManagedBy" = "Terraform"
+          + "Module"    = "oracle-a1"
+        }
+      + id             = (known after apply)
+      + state          = (known after apply)
+      + time_created   = (known after apply)
+      + vcn_id         = (known after apply)
+
+      + egress_security_rules {
+          + description      = "all egress, including the rate limit and quota API"
+          + destination      = "0.0.0.0/0"
+          + destination_type = "CIDR_BLOCK"
+          + protocol         = "all"
+          + stateless        = false
+        }
+
+      + ingress_security_rules {
+          + description = "SSH for the authentication bastion"
+          + protocol    = "6"
+          + source      = "0.0.0.0/0"
+          + source_type = "CIDR_BLOCK"
+          + stateless   = false
+
+          + tcp_options {
+              + max = 22
+              + min = 22
+            }
+        }
+      + ingress_security_rules {
+          + protocol    = "1"
+          + source      = "0.0.0.0/0"
+          + source_type = "CIDR_BLOCK"
+          + stateless   = false
+
+          + icmp_options {
+              + code = 4
+              + type = 3
+            }
+        }
+    }
+
+  # oci_core_subnet.public[0] will be created
+  + resource "oci_core_subnet" "public" {
+      + availability_domain        = (known after apply)
+      + cidr_block                 = "10.0.1.0/24"
+      + compartment_id             = "ocid1.compartment.oc1..aaaaaaaa401authq2m7x4v9c3b8n5k1j6h0g2f7d4s9a3"
+      + defined_tags               = (known after apply)
+      + dhcp_options_id            = (known after apply)
+      + display_name               = "authentication-proxy-public"
+      + dns_label                  = "public"
+      + freeform_tags              = {
+          + "Hub"       = "freebie-hub"
+          + "ManagedBy" = "Terraform"
+          + "Module"    = "oracle-a1"
+        }
+      + id                         = (known after apply)
+      + ipv6cidr_block             = (known after apply)
+      + ipv6cidr_blocks            = (known after apply)
+      + ipv6virtual_router_ip      = (known after apply)
+      + prohibit_internet_ingress  = (known after apply)
+      + prohibit_public_ip_on_vnic = false
+      + route_table_id             = (known after apply)
+      + security_list_ids          = (known after apply)
+      + state                      = (known after apply)
+      + subnet_domain_name         = (known after apply)
+      + time_created               = (known after apply)
+      + vcn_id                     = (known after apply)
+      + virtual_router_ip          = (known after apply)
+      + virtual_router_mac         = (known after apply)
+    }
+
+  # oci_core_vcn.main[0] will be created
+  + resource "oci_core_vcn" "main" {
+      + byoipv6cidr_blocks               = (known after apply)
+      + cidr_block                       = (known after apply)
+      + cidr_blocks                      = [
+          + "10.0.0.0/16",
+        ]
+      + compartment_id                   = "ocid1.compartment.oc1..aaaaaaaa401authq2m7x4v9c3b8n5k1j6h0g2f7d4s9a3"
+      + default_dhcp_options_id          = (known after apply)
+      + default_route_table_id           = (known after apply)
+      + default_security_list_id         = (known after apply)
+      + defined_tags                     = (known after apply)
+      + display_name                     = "authentication-proxy-vcn"
+      + dns_label                        = "a1vcn"
+      + freeform_tags                    = {
+          + "Hub"       = "freebie-hub"
+          + "ManagedBy" = "Terraform"
+          + "Module"    = "oracle-a1"
+        }
+      + id                               = (known after apply)
+      + ipv6cidr_blocks                  = (known after apply)
+      + ipv6private_cidr_blocks          = (known after apply)
+      + is_ipv6enabled                   = (known after apply)
+      + is_oracle_gua_allocation_enabled = (known after apply)
+      + state                            = (known after apply)
+      + time_created                     = (known after apply)
+      + vcn_domain_name                  = (known after apply)
+    }
+
+Plan: 6 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + availability_domain = "kIdk:AP-SYDNEY-1-AD-1"
+  + fault_domain        = (known after apply)
+  + image_name          = (known after apply)
+  + instance_id         = (known after apply)
+  + instance_name       = "authentication-proxy-a1"
+  + memory_in_gbs       = 12
+  + ocpus               = 2
+  + private_ip          = (known after apply)
+  + public_ip           = (known after apply)
+  + region              = "ap-sydney-1"
+  + ssh_command         = (known after apply)
+oci_core_vcn.main[0]: Creating...
+oci_core_vcn.main[0]: Creation complete after 1s [id=ocid1.vcn.oc1.ap-sydney-1.amaaaaaa429vcnq4m7x2c5b8n1k6j3h0g9f2d7s4a1]
+oci_core_internet_gateway.main[0]: Creating...
+oci_core_security_list.public[0]: Creating...
+oci_core_security_list.public[0]: Creation complete after 0s [id=ocid1.securitylist.oc1.ap-sydney-1.aaaaaaaa412slq7m3x8c2b5n9k4j1h6g0f3d8s2a7]
+oci_core_internet_gateway.main[0]: Creation complete after 1s [id=ocid1.internetgateway.oc1.ap-sydney-1.aaaaaaaa403igwq5m2x7c4b9n6k1j8h3g0f5d2s7a4]
+oci_core_route_table.public[0]: Creating...
+oci_core_route_table.public[0]: Creation complete after 1s [id=ocid1.routetable.oc1.ap-sydney-1.aaaaaaaa401rtq8m5x2c9b4n7k2j5h0g3f8d1s6a9]
+oci_core_subnet.public[0]: Creating...
+oci_core_subnet.public[0]: Creation complete after 2s [id=ocid1.subnet.oc1.ap-sydney-1.aaaaaaaa403snq1m6x3c8b2n5k9j4h7g2f5d0s3a8]
+oci_core_instance.a1: Creating...
+
+Error: 500-InternalError, Out of host capacity.
+Suggestion: The service for this resource encountered an error. Please contact support for help with service: Core Instance
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.ap-sydney-1.oraclecloud.com/20160918/instances 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: 3f1c0b8e2a4d4c7e9b6a5d4c3b2a1f0e/8A1B2C3D4E5F60718293A4B5C6D7E8F9/0F1E2D3C4B5A69788796A5B4C3D2E1F0 
+
+
+  with oci_core_instance.a1,
+  on main.tf line 1, in resource "oci_core_instance" "a1":
+   1: resource "oci_core_instance" "a1" {
+

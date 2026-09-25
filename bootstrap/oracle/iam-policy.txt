@@ -1,0 +1,39 @@
+# freebie-hub: IAM policy for the group freebie-hub-automation.
+#
+# OCI policy statements have no comment syntax. Submit only the lines that start with "Allow"
+# (README.md shows a command that does this). Create the policy in the ROOT compartment,
+# because it contains "in tenancy" statements.
+#
+# Placeholders:
+#   <location>         where the instance and its network live:
+#                      tenancy  |  compartment id ocid1.compartment.oc1..xxxx
+#   <bucket-location>  compartment of the Terraform state bucket, same two forms
+#                      (create-state-bucket.sh prints the right value)
+#   <state-bucket>     state bucket name, e.g. freebie-hub-tfstate
+#
+# If the group lives in an identity domain other than Default, write it as
+# 'DomainName'/'freebie-hub-automation'.
+
+# ListAvailabilityDomains (auth probe, AD discovery) needs COMPARTMENT_INSPECT.
+Allow group freebie-hub-automation to inspect compartments in tenancy
+# CreateComputeCapacityReport: only "manage" grants it, and the report always targets the root compartment.
+Allow group freebie-hub-automation to manage compute-capacity-reports in tenancy
+# Image lookup runs against the tenancy; "read" also covers the INSTANCE_IMAGE_READ that LaunchInstance checks.
+Allow group freebie-hub-automation to read instance-images in tenancy
+# Launch, read and update the instance, list instances for the orphan guard, read its VNIC for the public IP.
+Allow group freebie-hub-automation to manage instance-family in <location>
+# Create the VCN, gateway, route table, security list and subnet; also VNIC_CREATE + SUBNET_ATTACH for the launch.
+# With an existing subnet (OCI_SUBNET_OCID) "use virtual-network-family" is enough, granted in the subnet's
+# compartment and, if different, in the instance compartment.
+Allow group freebie-hub-automation to manage virtual-network-family in <location>
+# Terraform state and its lock object: list, read, create, overwrite, delete. "use objects" is not enough,
+# and a target.object.name condition would break terraform init.
+Allow group freebie-hub-automation to manage objects in <bucket-location> where target.bucket.name = '<state-bucket>'
+
+# Optional extras. Uncomment (remove the leading "# ") only if needed.
+#
+# Silences a harmless provider warning when it looks up the instance's boot volume:
+# Allow group freebie-hub-automation to inspect volumes in <location>
+#
+# Only if a launch or VCN create fails with an error about tag namespaces (Oracle-Tags tag defaults):
+# Allow group freebie-hub-automation to use tag-namespaces in tenancy where target.tag-namespace.name = 'oracle-tags'

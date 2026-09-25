@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "terraform"
+    directory: "/modules/oracle-a1/terraform"
+    schedule:
+      interval: "weekly"

@@ -1,0 +1,17 @@
+[0m[1moci_core_instance.a1: Creating...[0m[0m
+[31m╷[0m[0m
+[31m│[0m [0m[1m[31mError: [0m[0m[1m500-InternalError, Out of host capacity.[0m
+[31m│[0m [0mSuggestion: The service for this resource encountered an error. Please contact support for help with service: Core Instance
+[31m│[0m [0mDocumentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+[31m│[0m [0mAPI Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+[31m│[0m [0mRequest Target: POST https://iaas.ap-sydney-1.oraclecloud.com/20160918/instances 
+[31m│[0m [0mProvider version: 9.3.0, released on 2026-09-22.  
+[31m│[0m [0mService: Core Instance 
+[31m│[0m [0mOperation Name: LaunchInstance 
+[31m│[0m [0mOPC request ID: 3f1c0b8e2a4d4c7e9b6a5d4c3b2a1f0e/8A1B2C3D4E5F60718293A4B5C6D7E8F9/0F1E2D3C4B5A69788796A5B4C3D2E1F0 
+[31m│[0m
+[31m│[0m
+[31m│[0m [0m  with oci_core_instance.a1,
+[31m│[0m [0m  on main.tf line 1, in resource "oci_core_instance" "a1":
+[31m│[0m [0m   1: resource "oci_core_instance" "a1" {
+[31m╵[0m[0m

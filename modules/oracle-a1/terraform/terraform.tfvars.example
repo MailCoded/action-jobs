@@ -1,0 +1,19 @@
+# For plain `terraform plan`/`apply` from your machine only: copy to terraform.tfvars (git-ignored).
+# Remove it again before using run.sh, which takes every value from the environment and refuses
+# to run while a terraform.tfvars is present. In GitHub Actions nothing here is used.
+
+tenancy_ocid     = "ocid1.tenancy.oc1..aaaaexample"
+compartment_ocid = ""
+region           = "ap-sydney-1"
+
+ssh_public_key = "ssh-ed25519 AAAAC3NzaExample you@laptop"
+
+instance_name = "oracle-free-a1"
+ocpus         = 2
+memory_in_gbs = 12
+
+# Required for a plain local apply that creates the instance (run.sh sets it per attempt):
+# instance_availability_domain = "<name from: oci iam availability-domain list>"
+
+# existing_subnet_id = "ocid1.subnet.oc1.ap-sydney-1.aaaaexample"
+# ssh_allowed_cidr   = "203.0.113.4/32"

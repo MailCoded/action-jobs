@@ -1,0 +1,500 @@
+#!/usr/bin/env bash
+# shellcheck source-path=SCRIPTDIR
+set -uo pipefail
+
+FAKE_TOOL=terraform
+# shellcheck source=_scenario.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_scenario.sh"
+
+fake_record terraform "$@"
+fake_load_scenario
+
+readonly A1="oci_core_instance.a1"
+TF_FIXTURES="$FAKE_FIXTURES/terraform"
+
+chdir="."
+if [[ "${1:-}" == -chdir=* ]]; then
+  chdir="${1#-chdir=}"
+  shift
+fi
+if [[ ! -d "$chdir" ]]; then
+  printf 'Error handling -chdir option: chdir %s: no such file or directory\n' "$chdir" >&2
+  exit 1
+fi
+subcommand="${1:-}"
+(($# > 0)) && shift
+
+[[ -n "${FAKE_STATE_DIR:-}" ]] || fake_die "FAKE_STATE_DIR is not set"
+mkdir -p "$FAKE_STATE_DIR" || fake_die "cannot create FAKE_STATE_DIR"
+STATE="$FAKE_STATE_DIR/state.json"
+env | grep -E '^(TF_VAR_[A-Za-z0-9_]+|TF_IN_AUTOMATION|TF_INPUT|CHECKPOINT_DISABLE)=' | sort >"$FAKE_STATE_DIR/env.$subcommand"
+
+POSITIONAL=()
+VARS=()
+BACKEND_CONFIG=()
+OUT=""
+DETAILED=false
+AUTO_APPROVE=false
+JSON=false
+
+flag_error() {
+  printf 'Error parsing command-line flags: flag provided but not defined: %s\n' "$1" >&2
+  exit 1
+}
+
+parse_flags() {
+  while (($# > 0)); do
+    case "$1" in
+      -var=*) VARS+=("${1#-var=}") ;;
+      -var)
+        (($# >= 2)) || flag_error "$1"
+        VARS+=("$2")
+        shift
+        ;;
+      -out=*) OUT="${1#-out=}" ;;
+      -backend-config=*) BACKEND_CONFIG+=("${1#-backend-config=}") ;;
+      -detailed-exitcode) DETAILED=true ;;
+      -auto-approve) AUTO_APPROVE=true ;;
+      -json) JSON=true ;;
+      -input=* | -no-color | -lock-timeout=* | -lock=* | -lockfile=* | -refresh=true | -compact-warnings) ;;
+      -*) flag_error "$1" ;;
+      *) POSITIONAL+=("$1") ;;
+    esac
+    shift
+  done
+}
+
+declared_line() {
+  local file line
+  for file in "$chdir"/*.tf; do
+    [[ -f "$file" ]] || continue
+    line="$(grep -nE "^variable \"$1\" \\{" "$file" | head -n1 | cut -d: -f1)"
+    if [[ -n "$line" ]]; then
+      printf '%s:%s' "$(basename "$file")" "$line"
+      return 0
+    fi
+  done
+  return 1
+}
+
+required_variables() {
+  local file
+  for file in "$chdir"/*.tf; do
+    [[ -f "$file" ]] || continue
+    awk '/^variable "/ { name = $2; gsub(/"/, "", name); has_default = 0; next }
+         /^[ \t]+default[ \t]*=/ { has_default = 1 }
+         /^}/ { if (name != "" && !has_default) print name; name = "" }' "$file"
+  done
+}
+
+var_value() {
+  local name="$1" kv env_name="TF_VAR_$1"
+  for kv in "${VARS[@]}"; do
+    if [[ "${kv%%=*}" == "$name" ]]; then
+      printf '%s' "${kv#*=}"
+      return 0
+    fi
+  done
+  [[ -n "${!env_name+set}" ]] || return 1
+  printf '%s' "${!env_name}"
+}
+
+invalid_value() {
+  local name="$1" shown="$2" message="$3" where
+  where="$(declared_line "$name")"
+  printf '\nError: Invalid value for variable\n\n  on %s line %s:\n%4s: variable "%s" {\n' \
+    "${where%%:*}" "${where##*:}" "${where##*:}" "$name" >&2
+  printf '    ├────────────────\n    │ var.%s is %s\n\n%s\n\n' "$name" "$shown" "$message" >&2
+  exit 1
+}
+
+check_variables() {
+  local kv name value where
+  for kv in "${VARS[@]}"; do
+    [[ "$kv" == *=* ]] || flag_error "-var $kv"
+    name="${kv%%=*}"
+    if ! declared_line "$name" >/dev/null; then
+      printf '\nError: Value for undeclared variable\n\nA variable named "%s" was assigned on the command line, but the root module\ndoes not declare a variable of that name. To use this value, add a "variable"\nblock to the configuration.\n' "$name" >&2
+      exit 1
+    fi
+  done
+  while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    if ! value="$(var_value "$name")"; then
+      where="$(declared_line "$name")"
+      printf '\nError: No value for required variable\n\n  on %s line %s:\n%4s: variable "%s" {\n\nThe root module input variable "%s" is not set, and has no default value.\nUse a -var or -var-file command line argument to provide a value for this\nvariable.\n' \
+        "${where%%:*}" "${where##*:}" "${where##*:}" "$name" "$name" >&2
+      exit 1
+    fi
+  done < <(required_variables)
+  value="$(var_value tenancy_ocid)" || value=""
+  [[ "$value" =~ ^ocid1\.tenancy\. ]] || invalid_value tenancy_ocid '"(sensitive value)"' "tenancy_ocid must start with ocid1.tenancy."
+  value="$(var_value ssh_public_key)" || value=""
+  [[ "$value" =~ ^(ssh-ed25519\ |ssh-rsa\ |ecdsa-sha2-) ]] ||
+    invalid_value ssh_public_key '"(sensitive value)"' "ssh_public_key must be public key text starting with 'ssh-ed25519 ', 'ssh-rsa ' or 'ecdsa-sha2-', not a file path or a private key."
+  value="$(var_value fault_domain)" || value=""
+  [[ -z "$value" || "$value" =~ ^FAULT-DOMAIN-[1-3]$ ]] ||
+    invalid_value fault_domain "\"$value\"" "fault_domain must be empty or FAULT-DOMAIN-1, FAULT-DOMAIN-2 or FAULT-DOMAIN-3."
+}
+
+state_init() {
+  local src
+  [[ -f "$STATE" ]] && return 0
+  src="$(fake_fixture_path "$FAKE_STATE" "$TF_FIXTURES")" || fake_die "no state fixture named '$FAKE_STATE'"
+  cp "$src" "$STATE"
+}
+
+state_write() {
+  local tmp="$STATE.tmp"
+  jq "$@" "$STATE" >"$tmp" || fake_die "jq failed while updating state"
+  mv "$tmp" "$STATE"
+}
+
+state_normalise() {
+  state_write '.terraform_version //= "1.16.4" | .values //= {} | .values.root_module //= {} | .values.root_module.resources //= []'
+}
+
+state_resource() {
+  jq -c --arg a "$1" '[.values.root_module.resources[]? | select(.address == $a)][0] // empty' "$STATE"
+}
+
+state_has() {
+  [[ -n "$(state_resource "$1")" ]]
+}
+
+# shellcheck disable=SC2016
+state_remove() {
+  state_normalise
+  state_write --arg a "$1" '.values.root_module.resources |= map(select(.address != $a))'
+}
+
+# shellcheck disable=SC2016
+state_add_network() {
+  state_normalise
+  state_write --slurpfile net "$TF_FIXTURES/state-network-only.json" '
+    (.values.root_module.resources | map(.address)) as $have
+    | .values.root_module.resources += [$net[0].values.root_module.resources[] | select(.address as $x | $have | index($x) | not)]'
+}
+
+# shellcheck disable=SC2016
+state_add_instance() {
+  local ad="$1" fd="$2" lifecycle="$3" tainted="$4" ip="$5" ocpus="${TF_VAR_ocpus:-2}" memory="${TF_VAR_memory_in_gbs:-12}"
+  [[ "$ocpus" =~ ^[0-9]+([.][0-9]+)?$ ]] || ocpus=2
+  [[ "$memory" =~ ^[0-9]+([.][0-9]+)?$ ]] || memory=12
+  state_add_network
+  state_write --slurpfile tpl "$TF_FIXTURES/instance-a1.json" \
+    --arg ad "$ad" --arg fd "$fd" --arg st "$lifecycle" --arg ip "$ip" --arg id "$FAKE_INSTANCE_ID" \
+    --argjson tainted "$tainted" --argjson ocpus "$ocpus" --argjson memory "$memory" '
+    ($tpl[0]
+      | .values.availability_domain = $ad
+      | .values.fault_domain = $fd
+      | .values.state = $st
+      | .values.id = $id
+      | .values.public_ip = $ip
+      | .values.shape_config[0].ocpus = $ocpus
+      | .values.shape_config[0].memory_in_gbs = $memory
+      | if $tainted then .tainted = true else del(.tainted) end) as $i
+    | .values.root_module.resources = ([.values.root_module.resources[] | select(.address != "oci_core_instance.a1")] + [$i])'
+}
+
+plan_fixture() {
+  fake_fixture_path "$1" "$TF_FIXTURES" || fake_die "no plan fixture named '$1'"
+}
+
+plan_counts() {
+  jq -r '[
+      ([.resource_changes[]? | select(.change.actions | index("create"))] | length),
+      ([.resource_changes[]? | select(.change.actions == ["update"])] | length),
+      ([.resource_changes[]? | select(.change.actions | index("delete"))] | length),
+      ([.resource_changes[]? | select(.change.actions != ["no-op"] and .change.actions != ["read"])] | length)
+        + ([.output_changes[]? | select(.actions != ["no-op"])] | length)
+    ] | @tsv' "$1"
+}
+
+print_refreshing() {
+  jq -r '.values.root_module.resources[]? |
+      if .mode == "data" then "\(.address): Reading...\n\(.address): Read complete after 1s [id=\(.values.id)]"
+      else "\(.address): Refreshing state... [id=\(.values.id)]" end' "$STATE"
+}
+
+planfile_error() {
+  printf '\nError: Failed to read the given file as a state or plan file\n\nState read error: Error loading statefile: open %s: no such file or directory\n\nPlan read error: couldn'"'"'t load the provided path as either a local plan file\n(open %s: no such file or directory) or a saved cloud plan (open %s: no such\nfile or directory)\n' "$1" "$1" "$1" >&2
+  exit 1
+}
+
+cmd_init() {
+  local bc missing have_bucket=false have_namespace=false
+  parse_flags "$@"
+  for bc in "${BACKEND_CONFIG[@]}"; do
+    [[ "$bc" == bucket=?* ]] && have_bucket=true
+    [[ "$bc" == namespace=?* ]] && have_namespace=true
+  done
+  printf '\nInitializing the backend...\n'
+  if [[ "$FAKE_TF_INIT" != ok ]]; then
+    fake_emit_error "$FAKE_TF_INIT"
+    exit 1
+  fi
+  if ! "$have_bucket" || ! "$have_namespace"; then
+    missing=bucket
+    "$have_bucket" && missing=namespace
+    printf '\nError: Missing Required Value\n\n  on backend.tf line 2, in terraform:\n   2:   backend "oci" {\n\nThe attribute [{{} "%s"}] is required by the backend.\n' "$missing" >&2
+    exit 1
+  fi
+  printf '\nSuccessfully configured the backend "oci"! Terraform will automatically\nuse this backend unless the backend configuration changes.\n'
+  printf '\nInitializing provider plugins...\n- Reusing previous version of oracle/oci from the dependency lock file\n'
+  printf -- '- Installing oracle/oci v9.3.0...\n- Installed oracle/oci v9.3.0 (signed by a HashiCorp partner, key ID 1533A49284137CEB)\n'
+  printf '\nPartner and community providers are signed by their developers.\nIf you'"'"'d like to know more about provider signing, you can read about it here:\nhttps://developer.hashicorp.com/terraform/cli/plugins/signing\n'
+  printf '\nTerraform has been successfully initialized!\n'
+}
+
+cmd_validate() {
+  parse_flags "$@"
+  if [[ "$FAKE_TF_VALIDATE" != ok ]]; then
+    fake_emit_error "$FAKE_TF_VALIDATE"
+    exit 1
+  fi
+  printf 'Success! The configuration is valid.\n\n'
+}
+
+cmd_show() {
+  local planfile fixture
+  parse_flags "$@"
+  "$JSON" || fake_die "show without -json is not emulated"
+  if ((${#POSITIONAL[@]} > 0)); then
+    planfile="${POSITIONAL[0]}"
+    [[ -f "$planfile" ]] || planfile_error "$planfile"
+    fixture="$(sed -n 's/^fixture=//p' "$planfile")"
+    [[ -n "$fixture" ]] || planfile_error "$planfile"
+    jq -c . "$(plan_fixture "$fixture")"
+    return 0
+  fi
+  if [[ "$FAKE_SHOW_STATE" != ok ]]; then
+    fake_emit_error "$FAKE_SHOW_STATE"
+    exit 1
+  fi
+  state_init
+  jq -c . "$STATE"
+}
+
+cmd_plan() {
+  local fixture add change destroy total rc
+  parse_flags "$@"
+  check_variables
+  state_init
+  printf 'Acquiring state lock. This may take a few moments...\n'
+  if [[ -n "$FAKE_PLAN_LOG" ]]; then
+    fake_emit_error "$FAKE_PLAN_LOG"
+    exit 1
+  fi
+  print_refreshing
+  fixture="$(plan_fixture "$FAKE_PLAN_JSON")"
+  IFS=$'\t' read -r add change destroy total < <(plan_counts "$fixture")
+  if ((total == 0)); then
+    printf '\nNo changes. Your infrastructure matches the configuration.\n\nTerraform has compared your real infrastructure against your configuration\nand found no differences, so no changes are needed.\n'
+  else
+    printf '\nTerraform will perform the following actions:\n\n'
+    jq -r '.resource_changes[]? | select(.change.actions != ["no-op"]) |
+        "  # \(.address) " + (
+          if .change.actions == ["create"] then "will be created"
+          elif .change.actions == ["update"] then "will be updated in-place"
+          elif .change.actions == ["delete"] then "will be destroyed"
+          elif (.change.actions | index("delete")) and (.change.actions | index("create")) then
+            (if .action_reason == "replace_because_tainted" then "is tainted, so must be replaced" else "must be replaced" end)
+          else "will be changed" end)' "$fixture"
+    printf '\nPlan: %s to add, %s to change, %s to destroy.\n' "$add" "$change" "$destroy"
+  fi
+  if [[ -n "$OUT" ]]; then
+    printf 'fake terraform plan\nfixture=%s\n' "$FAKE_PLAN_JSON" >"$OUT" || fake_die "cannot write plan file $OUT"
+    printf '\nSaved the plan to: %s\n\nTo perform exactly these actions, run the following command to apply:\n    terraform apply "%s"\n' "$OUT" "$OUT"
+  fi
+  printf 'Releasing state lock. This may take a few moments...\n'
+  if [[ -n "$FAKE_PLAN_EXIT" ]]; then
+    rc="$FAKE_PLAN_EXIT"
+  elif "$DETAILED" && ((total > 0)); then
+    rc=2
+  else
+    rc=0
+  fi
+  exit "$rc"
+}
+
+print_outputs() {
+  jq -r 'to_entries[] | "\(.key) = \(.value.value | tojson)"' < <(outputs_json)
+}
+
+cmd_apply_saved() {
+  local planfile="$1" fixture add change destroy
+  [[ -f "$planfile" ]] || planfile_error "$planfile"
+  fixture="$(sed -n 's/^fixture=//p' "$planfile")"
+  [[ -n "$fixture" ]] || planfile_error "$planfile"
+  state_init
+  printf 'Acquiring state lock. This may take a few moments...\n'
+  if [[ "$FAKE_PLAN_APPLY" != ok ]]; then
+    fake_emit_error "$FAKE_PLAN_APPLY"
+    exit 1
+  fi
+  if [[ "$(jq -r --arg a "$A1" '[.resource_changes[]? | select(.address == $a) | .change.actions[]] | index("delete") != null' "$(plan_fixture "$fixture")")" == true ]]; then
+    fake_trip "saved plan that destroys $A1 was applied"
+  fi
+  IFS=$'\t' read -r add change destroy _ < <(plan_counts "$(plan_fixture "$fixture")")
+  jq -r '.resource_changes[]? | select(.change.actions == ["update"]) | "\(.address): Modifying... [id=\(.change.before.id)]\n\(.address): Modifications complete after 2s [id=\(.change.before.id)]"' "$(plan_fixture "$fixture")"
+  printf '\nApply complete! Resources: %s added, %s changed, %s destroyed.\n' "$add" "$change" "$destroy"
+  printf 'Releasing state lock. This may take a few moments...\n\nOutputs:\n\n'
+  print_outputs
+}
+
+cmd_apply() {
+  local kv ad="" fd="" outcome existing lifecycle tainted assigned_fd
+  parse_flags "$@"
+  if ((${#POSITIONAL[@]} > 0)); then
+    cmd_apply_saved "${POSITIONAL[0]}"
+    return 0
+  fi
+  if ! "$AUTO_APPROVE"; then
+    printf '\nError: No saved plan and -auto-approve is not set, but -input=false forbids asking for approval\n' >&2
+    exit 1
+  fi
+  check_variables
+  state_init
+  for kv in "${VARS[@]}"; do
+    case "${kv%%=*}" in
+      instance_availability_domain) ad="${kv#*=}" ;;
+      fault_domain) fd="${kv#*=}" ;;
+    esac
+  done
+  [[ -n "$ad" ]] || ad="$(var_value instance_availability_domain)" || ad=""
+  printf 'Acquiring state lock. This may take a few moments...\n'
+
+  existing="$(state_resource "$A1")"
+  if [[ -n "$existing" ]]; then
+    lifecycle="$(jq -r '.values.state // ""' <<<"$existing")"
+    tainted="$(jq -r '.tainted // false' <<<"$existing")"
+    if [[ "$lifecycle" == TERMINATED || "$FAKE_REFRESH_DROPS_A1" == true ]]; then
+      state_remove "$A1"
+    elif [[ "$tainted" == true ]]; then
+      fake_trip "apply -auto-approve would replace tainted $A1 (state $lifecycle)"
+    else
+      fake_trip "apply -auto-approve ran while $A1 is tracked (state $lifecycle)"
+    fi
+  fi
+
+  print_refreshing
+  outcome="$(fake_lookup "$FAKE_APPLY" "$ad/$fd" "$ad")" || outcome=ok
+  printf '\nTerraform will perform the following actions:\n\n  # %s will be created\n  + resource "oci_core_instance" "a1" {\n' "$A1"
+  printf '      + availability_domain = "%s"\n      + capacity_reservation_id = (known after apply)\n' "$ad"
+  if [[ -n "$fd" ]]; then
+    printf '      + fault_domain        = "%s"\n' "$fd"
+  else
+    printf '      + fault_domain        = (known after apply)\n'
+  fi
+  printf '      + shape               = "VM.Standard.A1.Flex"\n    }\n\nPlan: 1 to add, 0 to change, 0 to destroy.\n'
+
+  case "$outcome" in
+    ok)
+      assigned_fd="${fd:-$FAKE_ASSIGNED_FD}"
+      state_add_instance "$ad" "$assigned_fd" RUNNING false "$FAKE_PUBLIC_IP"
+      printf '%s: Creating...\n%s: Still creating... [10s elapsed]\n%s: Creation complete after 38s [id=%s]\n' \
+        "$A1" "$A1" "$A1" "$FAKE_INSTANCE_ID"
+      printf '\nApply complete! Resources: 1 added, 0 changed, 0 destroyed.\n'
+      printf 'Releasing state lock. This may take a few moments...\n\nOutputs:\n\n'
+      print_outputs
+      ;;
+    async:*)
+      state_add_instance "$ad" "${fd:-$FAKE_ASSIGNED_FD}" TERMINATING true ""
+      printf '%s: Creating...\n%s: Still creating... [10s elapsed]\n' "$A1" "$A1"
+      printf 'Releasing state lock. This may take a few moments...\n'
+      fake_emit_error "${outcome#async:}"
+      exit 1
+      ;;
+    *)
+      fake_is_error_fixture "$outcome" || fake_die "FAKE_APPLY outcome '$outcome' is neither ok, async:<fixture> nor a fixture"
+      [[ "$outcome" == lock* ]] || state_add_network
+      printf '%s: Creating...\n' "$A1"
+      printf 'Releasing state lock. This may take a few moments...\n'
+      fake_emit_error "$outcome"
+      exit 1
+      ;;
+  esac
+}
+
+cmd_state() {
+  local sub="${1:-}" addr removed=0
+  (($# > 0)) && shift
+  case "$sub" in
+    rm)
+      parse_flags "$@"
+      state_init
+      printf 'Acquiring state lock. This may take a few moments...\n'
+      if [[ "$FAKE_STATE_RM" != ok ]]; then
+        fake_emit_error "$FAKE_STATE_RM"
+        exit 1
+      fi
+      for addr in "${POSITIONAL[@]}"; do
+        if ! state_has "$addr"; then
+          printf '\nError: Invalid target address\n\nNo matching objects found. To view the available instances, use "terraform\nstate list". Please modify the address to reference a specific instance.\n' >&2
+          exit 1
+        fi
+        state_remove "$addr"
+        printf 'Removed %s\n' "$addr"
+        removed=$((removed + 1))
+      done
+      printf 'Successfully removed %d resource instance(s).\nReleasing state lock. This may take a few moments...\n' "$removed"
+      ;;
+    list)
+      state_init
+      jq -r '.values.root_module.resources[]?.address' "$STATE"
+      ;;
+    *) fake_die "state $sub is not emulated" ;;
+  esac
+}
+
+outputs_json() {
+  jq --arg region "${TF_VAR_region:-ap-sydney-1}" '
+    ([.values.root_module.resources[]? | select(.address == "oci_core_instance.a1")][0]) as $i
+    | ([.values.root_module.resources[]? | select(.address == "data.oci_core_images.arm")][0].values.images // []) as $imgs
+    | def s(v): {sensitive: false, type: "string", value: v};
+      def n(v): {sensitive: false, type: "number", value: v};
+    if $i == null then {region: s($region)}
+    else
+      ($i.values.source_details[0].source_id) as $src
+      | {
+          availability_domain: s($i.values.availability_domain),
+          fault_domain: s($i.values.fault_domain),
+          image_name: s([$imgs[] | select(.id == $src) | .display_name][0] // $src),
+          instance_id: s($i.values.id),
+          instance_name: s($i.values.display_name),
+          memory_in_gbs: n($i.values.shape_config[0].memory_in_gbs),
+          ocpus: n($i.values.shape_config[0].ocpus),
+          private_ip: s($i.values.private_ip),
+          public_ip: s($i.values.public_ip),
+          region: s($region)
+        }
+        + (if ($i.values.public_ip // "") != "" then {ssh_command: s("ssh ubuntu@" + $i.values.public_ip)} else {} end)
+    end' "$STATE"
+}
+
+cmd_output() {
+  parse_flags "$@"
+  "$JSON" || fake_die "output without -json is not emulated"
+  if [[ "$FAKE_OUTPUT" != ok ]]; then
+    fake_emit_error "$FAKE_OUTPUT"
+    exit 1
+  fi
+  state_init
+  outputs_json
+}
+
+case "$subcommand" in
+  init) cmd_init "$@" ;;
+  validate) cmd_validate "$@" ;;
+  show) cmd_show "$@" ;;
+  plan) cmd_plan "$@" ;;
+  apply) cmd_apply "$@" ;;
+  state) cmd_state "$@" ;;
+  output) cmd_output "$@" ;;
+  version | -version) printf 'Terraform v1.16.4\non linux_amd64\n' ;;
+  *)
+    printf 'Terraform has no command named "%s".\n\nTo see all of Terraform'"'"'s top-level commands, run:\n  terraform -help\n\n' "$subcommand" >&2
+    exit 1
+    ;;
+esac

@@ -1,0 +1,16 @@
+
+Error: 404-NotAuthorizedOrNotFound, Authorization failed or requested resource not found.
+Suggestion: Either the resource has been deleted or service Core Instance need policy to access this resource. Policy reference: https://docs.oracle.com/en-us/iaas/Content/Identity/Reference/policyreference.htm
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.ap-sydney-1.oraclecloud.com/20160918/instances 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: c4d5e6f7a8b94c0d1e2f3a4b5c6d7e8f/1F2E3D4C5B6A79880716253443526170/8091A2B3C4D5E6F708192A3B4C5D6E7F 
+
+
+  with oci_core_instance.a1,
+  on main.tf line 1, in resource "oci_core_instance" "a1":
+   1: resource "oci_core_instance" "a1" {
+

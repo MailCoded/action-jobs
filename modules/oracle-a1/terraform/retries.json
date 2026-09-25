@@ -1,0 +1,5 @@
+{
+  "409": { "retry_max_duration": 165, "first_retry_sleep_duration": 10 },
+  "429": { "retry_max_duration": 165, "first_retry_sleep_duration": 30 },
+  "500": { "retry_max_duration": 45, "first_retry_sleep_duration": 5 }
+}

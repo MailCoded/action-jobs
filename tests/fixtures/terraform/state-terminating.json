@@ -1,0 +1,683 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.16.4",
+  "values": {
+    "outputs": {
+      "availability_domain": {
+        "sensitive": false,
+        "type": "string",
+        "value": "kIdk:AP-SYDNEY-1-AD-1"
+      },
+      "fault_domain": {
+        "sensitive": false,
+        "type": "string",
+        "value": "FAULT-DOMAIN-2"
+      },
+      "image_name": {
+        "sensitive": false,
+        "type": "string",
+        "value": "Canonical-Ubuntu-24.04-aarch64-2026.09.18-0"
+      },
+      "instance_id": {
+        "sensitive": false,
+        "type": "string",
+        "value": "ocid1.instance.oc1.ap-sydney-1.anzxsljrfixturea1q7m3x8c2b5n9k4j1h6g0f3d8s2a7"
+      },
+      "instance_name": {
+        "sensitive": false,
+        "type": "string",
+        "value": "oracle-free-a1"
+      },
+      "memory_in_gbs": {
+        "sensitive": false,
+        "type": "number",
+        "value": 12
+      },
+      "ocpus": {
+        "sensitive": false,
+        "type": "number",
+        "value": 2
+      },
+      "private_ip": {
+        "sensitive": false,
+        "type": "string",
+        "value": "10.0.1.23"
+      },
+      "public_ip": {
+        "sensitive": false,
+        "type": "string",
+        "value": "203.0.113.10"
+      },
+      "region": {
+        "sensitive": false,
+        "type": "string",
+        "value": "ap-sydney-1"
+      },
+      "ssh_command": {
+        "sensitive": false,
+        "type": "string",
+        "value": "ssh ubuntu@203.0.113.10"
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "data.oci_core_images.arm",
+          "mode": "data",
+          "type": "oci_core_images",
+          "name": "arm",
+          "provider_name": "registry.terraform.io/oracle/oci",
+          "schema_version": 0,
+          "values": {
+            "compartment_id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+            "display_name": null,
+            "filter": [
+              {
+                "name": "display_name",
+                "regex": true,
+                "values": [
+                  "aarch64"
+                ]
+              }
+            ],
+            "id": "CoreImagesDataSource-1873092012",
+            "images": [
+              {
+                "agent_features": [],
+                "base_image_id": "",
+                "billable_size_in_gbs": "3",
+                "compartment_id": "",
+                "create_image_allowed": true,
+                "defined_tags": {},
+                "display_name": "Canonical-Ubuntu-24.04-aarch64-2026.09.18-0",
+                "freeform_tags": {},
+                "id": "ocid1.image.oc1.ap-sydney-1.aaaaaaaafixtureimg20260918q4c7m2n5v8x1b3d6f9h2k5",
+                "image_source_details": [],
+                "instance_id": "",
+                "launch_mode": "PARAVIRTUALIZED",
+                "launch_options": [
+                  {
+                    "boot_volume_type": "PARAVIRTUALIZED",
+                    "firmware": "UEFI_64",
+                    "is_consistent_volume_naming_enabled": true,
+                    "is_pv_encryption_in_transit_enabled": true,
+                    "network_type": "PARAVIRTUALIZED",
+                    "remote_data_volume_type": "PARAVIRTUALIZED"
+                  }
+                ],
+                "listing_type": "NONE",
+                "operating_system": "Canonical Ubuntu",
+                "operating_system_version": "24.04",
+                "size_in_mbs": "47694",
+                "state": "AVAILABLE",
+                "time_created": "2026-09-19 06:12:44.123 +0000 UTC"
+              },
+              {
+                "agent_features": [],
+                "base_image_id": "",
+                "billable_size_in_gbs": "3",
+                "compartment_id": "",
+                "create_image_allowed": true,
+                "defined_tags": {},
+                "display_name": "Canonical-Ubuntu-24.04-aarch64-2026.08.28-0",
+                "freeform_tags": {},
+                "id": "ocid1.image.oc1.ap-sydney-1.aaaaaaaafixtureimg20260828w7y2c5e8g1j4l7n0q3s6u9",
+                "image_source_details": [],
+                "instance_id": "",
+                "launch_mode": "PARAVIRTUALIZED",
+                "launch_options": [
+                  {
+                    "boot_volume_type": "PARAVIRTUALIZED",
+                    "firmware": "UEFI_64",
+                    "is_consistent_volume_naming_enabled": true,
+                    "is_pv_encryption_in_transit_enabled": true,
+                    "network_type": "PARAVIRTUALIZED",
+                    "remote_data_volume_type": "PARAVIRTUALIZED"
+                  }
+                ],
+                "listing_type": "NONE",
+                "operating_system": "Canonical Ubuntu",
+                "operating_system_version": "24.04",
+                "size_in_mbs": "47694",
+                "state": "AVAILABLE",
+                "time_created": "2026-08-29 05:41:10.456 +0000 UTC"
+              }
+            ],
+            "operating_system": "Canonical Ubuntu",
+            "operating_system_version": "24.04",
+            "shape": "VM.Standard.A1.Flex",
+            "sort_by": "TIMECREATED",
+            "sort_order": "DESC",
+            "state": "AVAILABLE"
+          },
+          "sensitive_values": {
+            "filter": [
+              {
+                "values": [
+                  false
+                ]
+              }
+            ],
+            "images": [
+              {
+                "agent_features": [],
+                "defined_tags": {},
+                "freeform_tags": {},
+                "image_source_details": [],
+                "launch_options": [
+                  {}
+                ]
+              },
+              {
+                "agent_features": [],
+                "defined_tags": {},
+                "freeform_tags": {},
+                "image_source_details": [],
+                "launch_options": [
+                  {}
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "address": "oci_core_instance.a1",
+          "mode": "managed",
+          "type": "oci_core_instance",
+          "name": "a1",
+          "provider_name": "registry.terraform.io/oracle/oci",
+          "schema_version": 0,
+          "values": {
+            "agent_config": [
+              {
+                "are_all_plugins_disabled": false,
+                "is_management_disabled": false,
+                "is_monitoring_disabled": false,
+                "plugins_config": []
+              }
+            ],
+            "async": null,
+            "availability_config": [
+              {
+                "is_live_migration_preferred": false,
+                "recovery_action": "RESTORE_INSTANCE"
+              }
+            ],
+            "availability_domain": "kIdk:AP-SYDNEY-1-AD-1",
+            "boot_volume_id": "ocid1.bootvolume.oc1.ap-sydney-1.abzxsljrfixturebv2q4w6e8r0t2y4u6i8o0p2a4s6d8",
+            "capacity_reservation_id": "",
+            "cluster_placement_group_id": "",
+            "compartment_id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+            "compute_cluster_id": "",
+            "create_vnic_details": [
+              {
+                "assign_ipv6ip": false,
+                "assign_private_dns_record": false,
+                "assign_public_ip": "true",
+                "defined_tags": {},
+                "display_name": "",
+                "freeform_tags": {},
+                "hostname_label": "",
+                "ipv6address_ipv6subnet_cidr_pair_details": [],
+                "nsg_ids": [],
+                "private_ip": "",
+                "security_attributes": {},
+                "skip_source_dest_check": false,
+                "subnet_cidr": "",
+                "subnet_id": "ocid1.subnet.oc1.ap-sydney-1.aaaaaaaafixturesubnet1m6x3c8b2n5k9j4h7g2f5d0s3",
+                "vlan_id": ""
+              }
+            ],
+            "dedicated_vm_host_id": "",
+            "defined_tags": {
+              "Oracle-Tags.CreatedBy": "ocid1.user.oc1..aaaaaaaafixtureautomationuserm3x8c2b5n9k4j1h6g0",
+              "Oracle-Tags.CreatedOn": "2026-09-20T04:05:06.789Z"
+            },
+            "display_name": "oracle-free-a1",
+            "extended_metadata": {},
+            "fault_domain": "FAULT-DOMAIN-2",
+            "freeform_tags": {
+              "Hub": "freebie-hub",
+              "ManagedBy": "Terraform",
+              "Module": "oracle-a1"
+            },
+            "hostname_label": null,
+            "id": "ocid1.instance.oc1.ap-sydney-1.anzxsljrfixturea1q7m3x8c2b5n9k4j1h6g0f3d8s2a7",
+            "image": "ocid1.image.oc1.ap-sydney-1.aaaaaaaafixtureimg20260918q4c7m2n5v8x1b3d6f9h2k5",
+            "instance_configuration_id": "",
+            "instance_options": [
+              {
+                "are_legacy_imds_endpoints_disabled": false
+              }
+            ],
+            "ipxe_script": "",
+            "is_cross_numa_node": false,
+            "is_pv_encryption_in_transit_enabled": false,
+            "launch_mode": "PARAVIRTUALIZED",
+            "launch_options": [
+              {
+                "boot_volume_type": "PARAVIRTUALIZED",
+                "firmware": "UEFI_64",
+                "is_consistent_volume_naming_enabled": true,
+                "is_pv_encryption_in_transit_enabled": false,
+                "network_type": "PARAVIRTUALIZED",
+                "remote_data_volume_type": "PARAVIRTUALIZED"
+              }
+            ],
+            "launch_volume_attachments": [],
+            "licensing_configs": [],
+            "metadata": {
+              "ssh_authorized_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFixtureStateKeyOnlyForTests0123456789ab fixture@example"
+            },
+            "platform_config": [],
+            "preemptible_instance_config": [],
+            "preserve_boot_volume": null,
+            "preserve_data_volumes_created_at_launch": null,
+            "private_ip": "10.0.1.23",
+            "public_ip": "203.0.113.10",
+            "region": "ap-sydney-1",
+            "security_attributes": {},
+            "security_attributes_state": "",
+            "shape": "VM.Standard.A1.Flex",
+            "shape_config": [
+              {
+                "baseline_ocpu_utilization": "",
+                "gpu_description": "",
+                "gpus": 0,
+                "local_disk_description": "",
+                "local_disks": 0,
+                "local_disks_total_size_in_gbs": 0,
+                "max_vnic_attachments": 2,
+                "memory_in_gbs": 12,
+                "networking_bandwidth_in_gbps": 2,
+                "nvmes": 0,
+                "ocpus": 2,
+                "processor_description": "3.0 GHz Ampere® Altra™",
+                "vcpus": 2
+              }
+            ],
+            "source_details": [
+              {
+                "boot_volume_size_in_gbs": "50",
+                "boot_volume_vpus_per_gb": "10",
+                "instance_source_image_filter_details": [],
+                "is_preserve_boot_volume_enabled": false,
+                "kms_key_id": "",
+                "source_id": "ocid1.image.oc1.ap-sydney-1.aaaaaaaafixtureimg20260918q4c7m2n5v8x1b3d6f9h2k5",
+                "source_type": "image"
+              }
+            ],
+            "state": "TERMINATING",
+            "subnet_id": "ocid1.subnet.oc1.ap-sydney-1.aaaaaaaafixturesubnet1m6x3c8b2n5k9j4h7g2f5d0s3",
+            "system_tags": {},
+            "time_created": "2026-09-20 04:05:06.789 +0000 UTC",
+            "time_maintenance_reboot_due": "",
+            "timeouts": {
+              "create": "10m",
+              "delete": null,
+              "update": null
+            },
+            "update_operation_constraint": null
+          },
+          "sensitive_values": {
+            "agent_config": [
+              {
+                "plugins_config": []
+              }
+            ],
+            "availability_config": [
+              {}
+            ],
+            "create_vnic_details": [
+              {
+                "defined_tags": {},
+                "freeform_tags": {},
+                "ipv6address_ipv6subnet_cidr_pair_details": [],
+                "nsg_ids": [],
+                "security_attributes": {}
+              }
+            ],
+            "defined_tags": {},
+            "extended_metadata": {},
+            "freeform_tags": {},
+            "instance_options": [
+              {}
+            ],
+            "launch_options": [
+              {}
+            ],
+            "launch_volume_attachments": [],
+            "licensing_configs": [],
+            "metadata": {},
+            "platform_config": [],
+            "preemptible_instance_config": [],
+            "security_attributes": {},
+            "shape_config": [
+              {}
+            ],
+            "source_details": [
+              {
+                "instance_source_image_filter_details": []
+              }
+            ],
+            "system_tags": {},
+            "timeouts": {}
+          },
+          "depends_on": [
+            "data.oci_core_images.arm",
+            "oci_core_internet_gateway.main",
+            "oci_core_route_table.public",
+            "oci_core_security_list.public",
+            "oci_core_subnet.public",
+            "oci_core_vcn.main"
+          ]
+        },
+        {
+          "address": "oci_core_internet_gateway.main[0]",
+          "mode": "managed",
+          "type": "oci_core_internet_gateway",
+          "name": "main",
+          "index": 0,
+          "provider_name": "registry.terraform.io/oracle/oci",
+          "schema_version": 0,
+          "values": {
+            "compartment_id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+            "defined_tags": {
+              "Oracle-Tags.CreatedBy": "ocid1.user.oc1..aaaaaaaafixtureautomationuserm3x8c2b5n9k4j1h6g0",
+              "Oracle-Tags.CreatedOn": "2026-09-20T04:05:06.789Z"
+            },
+            "display_name": "oracle-free-a1-igw",
+            "enabled": true,
+            "freeform_tags": {
+              "Hub": "freebie-hub",
+              "ManagedBy": "Terraform",
+              "Module": "oracle-a1"
+            },
+            "id": "ocid1.internetgateway.oc1.ap-sydney-1.aaaaaaaafixtureigwq5m2x7c4b9n6k1j8h3g0f5d2s7a4",
+            "route_table_id": "",
+            "state": "AVAILABLE",
+            "time_created": "2026-09-20 04:03:12.884 +0000 UTC",
+            "timeouts": null,
+            "vcn_id": "ocid1.vcn.oc1.ap-sydney-1.amaaaaaafixturevcnq4m7x2c5b8n1k6j3h0g9f2d7s4a1"
+          },
+          "sensitive_values": {
+            "defined_tags": {},
+            "freeform_tags": {}
+          },
+          "depends_on": [
+            "oci_core_vcn.main"
+          ]
+        },
+        {
+          "address": "oci_core_route_table.public[0]",
+          "mode": "managed",
+          "type": "oci_core_route_table",
+          "name": "public",
+          "index": 0,
+          "provider_name": "registry.terraform.io/oracle/oci",
+          "schema_version": 0,
+          "values": {
+            "compartment_id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+            "defined_tags": {
+              "Oracle-Tags.CreatedBy": "ocid1.user.oc1..aaaaaaaafixtureautomationuserm3x8c2b5n9k4j1h6g0",
+              "Oracle-Tags.CreatedOn": "2026-09-20T04:05:06.789Z"
+            },
+            "display_name": "oracle-free-a1-rt",
+            "freeform_tags": {
+              "Hub": "freebie-hub",
+              "ManagedBy": "Terraform",
+              "Module": "oracle-a1"
+            },
+            "id": "ocid1.routetable.oc1.ap-sydney-1.aaaaaaaafixturertq8m5x2c9b4n7k2j5h0g3f8d1s6a9",
+            "route_rules": [
+              {
+                "cidr_block": "",
+                "description": "",
+                "destination": "0.0.0.0/0",
+                "destination_type": "CIDR_BLOCK",
+                "network_entity_id": "ocid1.internetgateway.oc1.ap-sydney-1.aaaaaaaafixtureigwq5m2x7c4b9n6k1j8h3g0f5d2s7a4",
+                "route_type": "STATIC"
+              }
+            ],
+            "state": "AVAILABLE",
+            "time_created": "2026-09-20 04:03:14.017 +0000 UTC",
+            "timeouts": null,
+            "vcn_id": "ocid1.vcn.oc1.ap-sydney-1.amaaaaaafixturevcnq4m7x2c5b8n1k6j3h0g9f2d7s4a1"
+          },
+          "sensitive_values": {
+            "defined_tags": {},
+            "freeform_tags": {},
+            "route_rules": [
+              {}
+            ]
+          },
+          "depends_on": [
+            "oci_core_internet_gateway.main",
+            "oci_core_vcn.main"
+          ]
+        },
+        {
+          "address": "oci_core_security_list.public[0]",
+          "mode": "managed",
+          "type": "oci_core_security_list",
+          "name": "public",
+          "index": 0,
+          "provider_name": "registry.terraform.io/oracle/oci",
+          "schema_version": 0,
+          "values": {
+            "compartment_id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+            "defined_tags": {
+              "Oracle-Tags.CreatedBy": "ocid1.user.oc1..aaaaaaaafixtureautomationuserm3x8c2b5n9k4j1h6g0",
+              "Oracle-Tags.CreatedOn": "2026-09-20T04:05:06.789Z"
+            },
+            "display_name": "oracle-free-a1-sl",
+            "egress_security_rules": [
+              {
+                "description": "",
+                "destination": "0.0.0.0/0",
+                "destination_type": "CIDR_BLOCK",
+                "icmp_options": [],
+                "protocol": "all",
+                "stateless": false,
+                "tcp_options": [],
+                "udp_options": []
+              }
+            ],
+            "freeform_tags": {
+              "Hub": "freebie-hub",
+              "ManagedBy": "Terraform",
+              "Module": "oracle-a1"
+            },
+            "id": "ocid1.securitylist.oc1.ap-sydney-1.aaaaaaaafixturesl7m3x8c2b5n9k4j1h6g0f3d8s2a7",
+            "ingress_security_rules": [
+              {
+                "description": "",
+                "icmp_options": [
+                  {
+                    "code": 4,
+                    "type": 3
+                  }
+                ],
+                "protocol": "1",
+                "source": "0.0.0.0/0",
+                "source_type": "CIDR_BLOCK",
+                "stateless": false,
+                "tcp_options": [],
+                "udp_options": []
+              },
+              {
+                "description": "",
+                "icmp_options": [],
+                "protocol": "6",
+                "source": "0.0.0.0/0",
+                "source_type": "CIDR_BLOCK",
+                "stateless": false,
+                "tcp_options": [
+                  {
+                    "max": 22,
+                    "min": 22,
+                    "source_port_range": []
+                  }
+                ],
+                "udp_options": []
+              }
+            ],
+            "state": "AVAILABLE",
+            "time_created": "2026-09-20 04:03:12.990 +0000 UTC",
+            "timeouts": null,
+            "vcn_id": "ocid1.vcn.oc1.ap-sydney-1.amaaaaaafixturevcnq4m7x2c5b8n1k6j3h0g9f2d7s4a1"
+          },
+          "sensitive_values": {
+            "defined_tags": {},
+            "egress_security_rules": [
+              {
+                "icmp_options": [],
+                "tcp_options": [],
+                "udp_options": []
+              }
+            ],
+            "freeform_tags": {},
+            "ingress_security_rules": [
+              {
+                "icmp_options": [
+                  {}
+                ],
+                "tcp_options": [],
+                "udp_options": []
+              },
+              {
+                "icmp_options": [],
+                "tcp_options": [
+                  {
+                    "source_port_range": []
+                  }
+                ],
+                "udp_options": []
+              }
+            ]
+          },
+          "depends_on": [
+            "oci_core_vcn.main"
+          ]
+        },
+        {
+          "address": "oci_core_subnet.public[0]",
+          "mode": "managed",
+          "type": "oci_core_subnet",
+          "name": "public",
+          "index": 0,
+          "provider_name": "registry.terraform.io/oracle/oci",
+          "schema_version": 0,
+          "values": {
+            "availability_domain": null,
+            "cidr_block": "10.0.1.0/24",
+            "compartment_id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+            "defined_tags": {
+              "Oracle-Tags.CreatedBy": "ocid1.user.oc1..aaaaaaaafixtureautomationuserm3x8c2b5n9k4j1h6g0",
+              "Oracle-Tags.CreatedOn": "2026-09-20T04:05:06.789Z"
+            },
+            "dhcp_options_id": "ocid1.dhcpoptions.oc1.ap-sydney-1.aaaaaaaafixturedhcpz9x7c5v3b1n9m7k5j3h1g9f7d5",
+            "display_name": "oracle-free-a1-public",
+            "dns_label": "public",
+            "freeform_tags": {
+              "Hub": "freebie-hub",
+              "ManagedBy": "Terraform",
+              "Module": "oracle-a1"
+            },
+            "id": "ocid1.subnet.oc1.ap-sydney-1.aaaaaaaafixturesubnet1m6x3c8b2n5k9j4h7g2f5d0s3",
+            "ipv4cidr_blocks": [
+              "10.0.1.0/24"
+            ],
+            "ipv6cidr_block": null,
+            "ipv6cidr_blocks": [],
+            "ipv6virtual_router_ip": null,
+            "prohibit_internet_ingress": false,
+            "prohibit_public_ip_on_vnic": false,
+            "route_table_id": "ocid1.routetable.oc1.ap-sydney-1.aaaaaaaafixturertq8m5x2c9b4n7k2j5h0g3f8d1s6a9",
+            "security_list_ids": [
+              "ocid1.securitylist.oc1.ap-sydney-1.aaaaaaaafixturesl7m3x8c2b5n9k4j1h6g0f3d8s2a7"
+            ],
+            "state": "AVAILABLE",
+            "subnet_domain_name": "public.a1vcn.oraclevcn.com",
+            "time_created": "2026-09-20 04:03:15.332 +0000 UTC",
+            "timeouts": null,
+            "vcn_id": "ocid1.vcn.oc1.ap-sydney-1.amaaaaaafixturevcnq4m7x2c5b8n1k6j3h0g9f2d7s4a1",
+            "virtual_router_ip": "10.0.1.1",
+            "virtual_router_mac": "00:00:17:5A:1B:2C"
+          },
+          "sensitive_values": {
+            "defined_tags": {},
+            "freeform_tags": {},
+            "ipv4cidr_blocks": [
+              false
+            ],
+            "ipv6cidr_blocks": [],
+            "security_list_ids": [
+              false
+            ]
+          },
+          "depends_on": [
+            "oci_core_internet_gateway.main",
+            "oci_core_route_table.public",
+            "oci_core_security_list.public",
+            "oci_core_vcn.main"
+          ]
+        },
+        {
+          "address": "oci_core_vcn.main[0]",
+          "mode": "managed",
+          "type": "oci_core_vcn",
+          "name": "main",
+          "index": 0,
+          "provider_name": "registry.terraform.io/oracle/oci",
+          "schema_version": 0,
+          "values": {
+            "byoipv6cidr_blocks": [],
+            "byoipv6cidr_details": [],
+            "cidr_block": "10.0.0.0/16",
+            "cidr_blocks": [
+              "10.0.0.0/16"
+            ],
+            "compartment_id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+            "default_dhcp_options_id": "ocid1.dhcpoptions.oc1.ap-sydney-1.aaaaaaaafixturedhcpz9x7c5v3b1n9m7k5j3h1g9f7d5",
+            "default_route_table_id": "ocid1.routetable.oc1.ap-sydney-1.aaaaaaaafixturedefaultrtl2k4j6h8g0f2d4s6a8",
+            "default_security_list_id": "ocid1.securitylist.oc1.ap-sydney-1.aaaaaaaafixturedefaultslp1o3i5u7y9t1r3e5w7",
+            "defined_tags": {
+              "Oracle-Tags.CreatedBy": "ocid1.user.oc1..aaaaaaaafixtureautomationuserm3x8c2b5n9k4j1h6g0",
+              "Oracle-Tags.CreatedOn": "2026-09-20T04:05:06.789Z"
+            },
+            "display_name": "oracle-free-a1-vcn",
+            "dns_label": "a1vcn",
+            "freeform_tags": {
+              "Hub": "freebie-hub",
+              "ManagedBy": "Terraform",
+              "Module": "oracle-a1"
+            },
+            "id": "ocid1.vcn.oc1.ap-sydney-1.amaaaaaafixturevcnq4m7x2c5b8n1k6j3h0g9f2d7s4a1",
+            "ipv6cidr_blocks": [],
+            "ipv6private_cidr_blocks": [],
+            "is_ipv6enabled": false,
+            "is_oracle_gua_allocation_enabled": null,
+            "security_attributes": {},
+            "state": "AVAILABLE",
+            "time_created": "2026-09-20 04:03:11.201 +0000 UTC",
+            "timeouts": null,
+            "vcn_domain_name": "a1vcn.oraclevcn.com"
+          },
+          "sensitive_values": {
+            "byoipv6cidr_blocks": [],
+            "byoipv6cidr_details": [],
+            "cidr_blocks": [
+              false
+            ],
+            "defined_tags": {},
+            "freeform_tags": {},
+            "ipv6cidr_blocks": [],
+            "ipv6private_cidr_blocks": [],
+            "security_attributes": {}
+          }
+        }
+      ]
+    }
+  }
+}

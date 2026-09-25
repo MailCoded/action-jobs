@@ -1,0 +1,11 @@
+
+Error: Invalid value for variable
+
+  on variables.tf line 61:
+  61: variable "ocpus" {
+    ├────────────────
+    │ var.ocpus is 5
+
+ocpus must be a whole number between 1 and 4 (Always Free allows 2 in total).
+
+This was checked by the validation rule at variables.tf:66,3-13.

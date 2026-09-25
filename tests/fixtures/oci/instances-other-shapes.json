@@ -1,0 +1,166 @@
+{
+  "data": [
+    {
+      "agent-config": {
+        "are-all-plugins-disabled": false,
+        "is-management-disabled": false,
+        "is-monitoring-disabled": false,
+        "plugins-config": null
+      },
+      "availability-config": {
+        "is-live-migration-preferred": null,
+        "recovery-action": "RESTORE_INSTANCE"
+      },
+      "availability-domain": "kIdk:AP-SYDNEY-1-AD-1",
+      "capacity-reservation-id": null,
+      "cluster-placement-group-id": null,
+      "compartment-id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+      "dedicated-vm-host-id": null,
+      "defined-tags": {
+        "Oracle-Tags": {
+          "CreatedBy": "ocid1.user.oc1..aaaaaaaafixtureautomationuserm3x8c2b5n9k4j1h6g0",
+          "CreatedOn": "2026-05-02T08:09:10.111000Z"
+        }
+      },
+      "display-name": "micro-box",
+      "extended-metadata": {},
+      "fault-domain": "FAULT-DOMAIN-1",
+      "freeform-tags": {},
+      "id": "ocid1.instance.oc1.ap-sydney-1.anzxsljrmicroboxw2e4r6t8y0u2i4o6p8a0s2d4f6g8h0",
+      "image-id": "ocid1.image.oc1.ap-sydney-1.aaaaaaaafixtureimg20260918q4c7m2n5v8x1b3d6f9h2k5",
+      "instance-configuration-id": null,
+      "instance-options": {
+        "are-legacy-imds-endpoints-disabled": false
+      },
+      "ipxe-script": null,
+      "is-cross-numa-node": false,
+      "launch-mode": "PARAVIRTUALIZED",
+      "launch-options": {
+        "boot-volume-type": "PARAVIRTUALIZED",
+        "firmware": "UEFI_64",
+        "is-consistent-volume-naming-enabled": true,
+        "is-pv-encryption-in-transit-enabled": false,
+        "network-type": "PARAVIRTUALIZED",
+        "remote-data-volume-type": "PARAVIRTUALIZED"
+      },
+      "licensing-configs": null,
+      "lifecycle-state": "RUNNING",
+      "metadata": {
+        "ssh_authorized_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFixtureStateKeyOnlyForTests0123456789ab fixture@example"
+      },
+      "placement-constraint-details": null,
+      "platform-config": null,
+      "preemptible-instance-config": null,
+      "region": "ap-sydney-1",
+      "security-attributes": {},
+      "security-attributes-state": "STABLE",
+      "shape": "VM.Standard.E2.1.Micro",
+      "shape-config": {
+        "baseline-ocpu-utilization": null,
+        "gpu-description": null,
+        "gpus": 0,
+        "local-disk-description": null,
+        "local-disks": 0,
+        "local-disks-total-size-in-gbs": null,
+        "max-vnic-attachments": 2,
+        "memory-in-gbs": 1.0,
+        "networking-bandwidth-in-gbps": 0.48,
+        "ocpus": 1.0,
+        "processor-description": "2.0 GHz AMD EPYC™ 7551 (Naples)",
+        "vcpus": 2
+      },
+      "source-details": {
+        "boot-volume-size-in-gbs": null,
+        "boot-volume-vpus-per-gb": null,
+        "image-id": "ocid1.image.oc1.ap-sydney-1.aaaaaaaafixtureimg20260918q4c7m2n5v8x1b3d6f9h2k5",
+        "instance-source-image-filter-details": null,
+        "kms-key-id": null,
+        "source-type": "image"
+      },
+      "system-tags": {},
+      "time-created": "2026-05-02T08:09:10.111000+00:00",
+      "time-maintenance-reboot-due": null
+    },
+    {
+      "agent-config": {
+        "are-all-plugins-disabled": false,
+        "is-management-disabled": false,
+        "is-monitoring-disabled": false,
+        "plugins-config": null
+      },
+      "availability-config": {
+        "is-live-migration-preferred": null,
+        "recovery-action": "RESTORE_INSTANCE"
+      },
+      "availability-domain": "kIdk:AP-SYDNEY-1-AD-1",
+      "capacity-reservation-id": null,
+      "cluster-placement-group-id": null,
+      "compartment-id": "ocid1.tenancy.oc1..aaaaaaaafixturetenancyq7z4w5hn3ceqkdfvmh2lxr6",
+      "dedicated-vm-host-id": null,
+      "defined-tags": {
+        "Oracle-Tags": {
+          "CreatedBy": "ocid1.user.oc1..aaaaaaaafixtureautomationuserm3x8c2b5n9k4j1h6g0",
+          "CreatedOn": "2026-04-11T01:02:03.004000Z"
+        }
+      },
+      "display-name": "paid-e4",
+      "extended-metadata": {},
+      "fault-domain": "FAULT-DOMAIN-1",
+      "freeform-tags": {},
+      "id": "ocid1.instance.oc1.ap-sydney-1.anzxsljre4flexq1w3e5r7t9y1u3i5o7p9a1s3d5f7g9h1",
+      "image-id": "ocid1.image.oc1.ap-sydney-1.aaaaaaaafixtureimg20260918q4c7m2n5v8x1b3d6f9h2k5",
+      "instance-configuration-id": null,
+      "instance-options": {
+        "are-legacy-imds-endpoints-disabled": false
+      },
+      "ipxe-script": null,
+      "is-cross-numa-node": false,
+      "launch-mode": "PARAVIRTUALIZED",
+      "launch-options": {
+        "boot-volume-type": "PARAVIRTUALIZED",
+        "firmware": "UEFI_64",
+        "is-consistent-volume-naming-enabled": true,
+        "is-pv-encryption-in-transit-enabled": false,
+        "network-type": "PARAVIRTUALIZED",
+        "remote-data-volume-type": "PARAVIRTUALIZED"
+      },
+      "licensing-configs": null,
+      "lifecycle-state": "STOPPED",
+      "metadata": {
+        "ssh_authorized_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFixtureStateKeyOnlyForTests0123456789ab fixture@example"
+      },
+      "placement-constraint-details": null,
+      "platform-config": null,
+      "preemptible-instance-config": null,
+      "region": "ap-sydney-1",
+      "security-attributes": {},
+      "security-attributes-state": "STABLE",
+      "shape": "VM.Standard.E4.Flex",
+      "shape-config": {
+        "baseline-ocpu-utilization": null,
+        "gpu-description": null,
+        "gpus": 0,
+        "local-disk-description": null,
+        "local-disks": 0,
+        "local-disks-total-size-in-gbs": null,
+        "max-vnic-attachments": 2,
+        "memory-in-gbs": 8.0,
+        "networking-bandwidth-in-gbps": 0.48,
+        "ocpus": 1.0,
+        "processor-description": "2.0 GHz AMD EPYC™ 7551 (Naples)",
+        "vcpus": 2
+      },
+      "source-details": {
+        "boot-volume-size-in-gbs": null,
+        "boot-volume-vpus-per-gb": null,
+        "image-id": "ocid1.image.oc1.ap-sydney-1.aaaaaaaafixtureimg20260918q4c7m2n5v8x1b3d6f9h2k5",
+        "instance-source-image-filter-details": null,
+        "kms-key-id": null,
+        "source-type": "image"
+      },
+      "system-tags": {},
+      "time-created": "2026-04-11T01:02:03.004000+00:00",
+      "time-maintenance-reboot-due": null
+    }
+  ]
+}

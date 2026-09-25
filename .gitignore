@@ -1,0 +1,18 @@
+*.pem
+*.key
+.oci/
+.env
+
+# Terraform state, plans and local variable files (.terraform.lock.hcl IS committed)
+.terraform/
+terraform.tfstate*
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+*.tfplan
+tfplan
+crash.log
+crash.*.log

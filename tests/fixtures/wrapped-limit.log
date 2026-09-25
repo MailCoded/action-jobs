@@ -1,0 +1,11 @@
+
+Error: Failed to launch the A1 instance
+
+  with oci_core_instance.a1,
+  on main.tf line 1, in resource "oci_core_instance" "a1":
+   1: resource "oci_core_instance" "a1" {
+
+The launch request was rejected by the Compute service: the following service
+limits were exceeded: the Ampere A1 core and memory allowance of this
+tenancy. Request a service limit increase from the service limits page in the
+console.

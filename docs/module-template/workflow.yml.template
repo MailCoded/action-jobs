@@ -1,0 +1,50 @@
+name: example
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 */6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: example
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  example:
+    if: vars.EXAMPLE_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@<CHECKOUT_SHA> # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run example module
+        id: run
+        env:
+          EXAMPLE_TARGET: ${{ vars.EXAMPLE_TARGET }}
+        run: |
+          rc=0
+          ./modules/example/run.sh || rc=$?
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          case "$rc" in
+            0 | 2 | 3) exit 0 ;;
+            *) exit "$rc" ;;
+          esac
+
+      - name: Notify
+        if: always() && (steps.run.outputs.status == 'done' || steps.run.outputs.status == 'fatal' || failure())
+        uses: ./.github/actions/notify
+        with:
+          urls: ${{ secrets.APPRISE_URLS }}
+          status: ${{ steps.run.outputs.status || 'failed' }}
+          title: "example: ${{ steps.run.outputs.status || 'failed' }}"
+          body: ${{ steps.run.outputs.message }}

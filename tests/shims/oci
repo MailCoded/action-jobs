@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# shellcheck source-path=SCRIPTDIR
+set -uo pipefail
+
+FAKE_TOOL=oci
+# shellcheck source=_scenario.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_scenario.sh"
+
+fake_record oci "$@"
+fake_load_scenario
+
+usage_error() {
+  printf 'Usage: oci [OPTIONS] COMMAND [ARGS]...\nTry '"'"'oci -h'"'"' for help.\n\nError: %s\n' "$1" >&2
+  exit 2
+}
+
+words=()
+declare -A opt=()
+raw_output=false
+while (($# > 0)); do
+  case "$1" in
+    --raw-output) raw_output=true ;;
+    --all | --no-retry | --debug) ;;
+    --*=*) opt["${1%%=*}"]="${1#*=}" ;;
+    --*)
+      (($# >= 2)) || usage_error "Option '$1' requires an argument."
+      opt["$1"]="$2"
+      shift
+      ;;
+    -*) usage_error "No such option: $1" ;;
+    *) words+=("$1") ;;
+  esac
+  shift
+done
+
+require_opts() {
+  local name missing=()
+  for name in "$@"; do
+    [[ -n "${opt[$name]:-}" ]] || missing+=("$name")
+  done
+  ((${#missing[@]} == 0)) && return 0
+  printf 'Error: Missing option(s) %s.\n' "$(IFS=,; printf '%s' "${missing[*]}")" >&2
+  exit 1
+}
+
+cli_fail() {
+  local name="$1"
+  case "$name" in
+    auth) name="cli-auth" ;;
+    throttle) name="cli-throttle" ;;
+  esac
+  fake_emit_error "$name"
+  exit 1
+}
+
+json_array() {
+  jq -n '$ARGS.positional' --args "$@"
+}
+
+ad_list() {
+  local query="${opt[--query]:-}" compartment="${opt[--compartment-id]:-}"
+  local -a ads=()
+  case "$FAKE_AD_LIST" in
+    ok) ;;
+    empty) exit 0 ;;
+    *) cli_fail "$FAKE_AD_LIST" ;;
+  esac
+  read -r -a ads <<<"$FAKE_ADS"
+  ((${#ads[@]} > 0)) || exit 0
+  case "$query" in
+    'data[].name') json_array "${ads[@]}" ;;
+    'data[0].name')
+      if "$raw_output"; then
+        printf '%s\n' "${ads[0]}"
+      else
+        jq -n --arg a "${ads[0]}" '$a'
+      fi
+      ;;
+    '')
+      jq -nS --arg c "$compartment" '{data: [$ARGS.positional[] | {
+          "compartment-id": $c,
+          id: ("ocid1.availabilitydomain.oc1..aaaaaaaa" + (. | ascii_downcase | gsub("[^a-z0-9]"; ""))),
+          name: .}]}' --args "${ads[@]}"
+      ;;
+    *) fake_die "unsupported --query for availability-domain list: $query" ;;
+  esac
+}
+
+capacity_report() {
+  local ad shapes answer query="${opt[--query]:-}"
+  local -a statuses=()
+  require_opts --availability-domain --compartment-id --shape-availabilities
+  ad="${opt[--availability-domain]}"
+  shapes="${opt[--shape-availabilities]}"
+  if ! jq -e 'type == "array"' >/dev/null 2>&1 <<<"$shapes"; then
+    printf "Parameter 'shape_availabilities' must be in JSON format.\n" >&2
+    exit 1
+  fi
+  answer="$(fake_lookup "$FAKE_CAPACITY" "$ad")" || answer=AVAILABLE
+  case "$answer" in
+    error) answer=cli-capacity-error ;;
+    auth) answer=cli-capacity-notauthorized ;;
+  esac
+  if [[ "$answer" == empty ]]; then
+    printf 'Query returned empty result, no output to show.\n' >&2
+    exit 0
+  fi
+  if fake_is_error_fixture "$answer"; then
+    cli_fail "$answer"
+  fi
+  IFS=, read -r -a statuses <<<"$answer"
+  case "$query" in
+    'data."shape-availabilities"[]."availability-status"') json_array "${statuses[@]}" ;;
+    'data."shape-availabilities"[0]."availability-status"')
+      if "$raw_output"; then
+        printf '%s\n' "${statuses[0]}"
+      else
+        jq -n --arg s "${statuses[0]}" '$s'
+      fi
+      ;;
+    '')
+      jq -nS --arg ad "$ad" --arg c "${opt[--compartment-id]}" --argjson shapes "$shapes" '{data: {
+          "availability-domain": $ad,
+          "compartment-id": $c,
+          "shape-availabilities": [$ARGS.positional[] as $s | $shapes[0] as $req | {
+            "availability-status": $s,
+            "available-count": (if $s == "AVAILABLE" then 1 else 0 end),
+            "fault-domain": null,
+            "instance-shape": $req.instanceShape,
+            "instance-shape-config": {
+              "baseline-ocpu-utilization": null,
+              "memory-in-gbs": ($req.instanceShapeConfig.memoryInGBs // null),
+              nvmes: null,
+              ocpus: ($req.instanceShapeConfig.ocpus // null)}}],
+          "time-created": "2026-09-25T03:04:05.678000+00:00"}}' --args "${statuses[@]}"
+      ;;
+    *) fake_die "unsupported --query for compute-capacity-report create: $query" ;;
+  esac
+}
+
+instance_list() {
+  local path
+  require_opts --compartment-id
+  case "$FAKE_INSTANCE_LIST" in
+    none) exit 0 ;;
+    *.json)
+      path="$(fake_fixture_path "$FAKE_INSTANCE_LIST" "$FAKE_FIXTURES/oci")" ||
+        fake_die "no instance-list fixture named '$FAKE_INSTANCE_LIST'"
+      jq -S . "$path"
+      ;;
+    auth) cli_fail cli-instances-notauthorized ;;
+    throttle) cli_fail cli-instances-throttle ;;
+    *) cli_fail "$FAKE_INSTANCE_LIST" ;;
+  esac
+}
+
+case "${words[*]:-}" in
+  "iam availability-domain list") ad_list ;;
+  "compute compute-capacity-report create") capacity_report ;;
+  "compute instance list") instance_list ;;
+  "") usage_error "Missing command." ;;
+  *) usage_error "No such command '${words[*]}'." ;;
+esac

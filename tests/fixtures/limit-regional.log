@@ -1,0 +1,16 @@
+
+Error: 400-LimitExceeded, The following service limits were exceeded: standard-a1-memory-regional-count, standard-a1-core-regional-count. Request a service limit increase from the service limits page in the console. 
+Suggestion: Request a service limit increase for this resource Core Instance
+Documentation: https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance 
+API Reference: https://docs.oracle.com/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance 
+Request Target: POST https://iaas.ap-sydney-1.oraclecloud.com/20160918/instances 
+Provider version: 9.3.0, released on 2026-09-22.  
+Service: Core Instance 
+Operation Name: LaunchInstance 
+OPC request ID: 0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a/9F8E7D6C5B4A39281706F5E4D3C2B1A0/2B4D6F8091A3C5E7F9B1D3F5A7C9E1B3 
+
+
+  with oci_core_instance.a1,
+  on main.tf line 1, in resource "oci_core_instance" "a1":
+   1: resource "oci_core_instance" "a1" {
+

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -uo pipefail
+line="sleep $*"
+printf '%s\n' "${line//$'\n'/ }" >>"${FAKE_CALLS:-/dev/null}"
