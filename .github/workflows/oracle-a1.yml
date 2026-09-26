@@ -12,7 +12,7 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: "4,19,34,49 * * * *"
+    - cron: "17 * * * *"
 
 permissions:
   contents: read
@@ -88,43 +88,59 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          workflow_state() {
+            gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/oracle-a1.yml" --jq .state 2>/dev/null || true
+          }
           # A run queued behind the successful one still starts after the disable; stay quiet then.
-          state="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/oracle-a1.yml" --jq .state 2>/dev/null || true)"
-          if [[ "$state" == "disabled_manually" ]]; then
+          if [[ "$(workflow_state)" == "disabled_manually" ]]; then
             echo "already_disabled=true" >> "$GITHUB_OUTPUT"
             echo "The workflow was already disabled by an earlier successful run; not notifying again."
             exit 0
           fi
           if gh workflow disable oracle-a1.yml --repo "$GITHUB_REPOSITORY"; then
+            echo "disabled=true" >> "$GITHUB_OUTPUT"
             echo "Workflow disabled (schedule and manual runs). Re-enable with: gh workflow enable oracle-a1.yml"
+          elif [[ "$(workflow_state)" == "disabled_manually" ]]; then
+            echo "already_disabled=true" >> "$GITHUB_OUTPUT"
+            echo "The workflow is already disabled."
           else
             echo "::warning::Could not disable the oracle-a1 workflow. Disable it manually under Actions to stop polling."
           fi
 
       - name: Open an issue announcing the instance
-        if: steps.run.outputs.exit_code == '0' && steps.disable.outputs.already_disabled != 'true'
+        if: always() && steps.run.outputs.reason == 'instance_created'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-          REASON: ${{ steps.run.outputs.reason }}
+          ASSIGNEE: ${{ vars.ORACLE_A1_ASSIGNEE || github.repository_owner }}
+          DISABLED: ${{ steps.disable.outputs.disabled }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          # Assigned and mentioned by the Actions bot, so the owner gets a GitHub (Mobile) notification.
+          # Assigned and mentioned by the Actions bot, so the assignee gets a GitHub (Mobile) notification.
+          if [[ "$DISABLED" == "true" ]]; then
+            next="The workflow has disabled itself. Re-enable it with \`gh workflow enable oracle-a1.yml\` only if you want another attempt, for example after terminating the instance."
+          else
+            next="The workflow could not disable itself: disable it under Actions → oracle-a1 to stop the schedule."
+          fi
           title="oracle-a1: the A1 instance is ready"
           body="$(cat <<EOF
-          @${GITHUB_REPOSITORY_OWNER} the oracle-a1 workflow finished with \`done\` (\`${REASON}\`): the Always Free A1 instance is up.
+          @${ASSIGNEE} the oracle-a1 workflow created the Always Free A1 instance.
 
           The public IP and the SSH command are in the job summary of the run: ${RUN_URL}
 
-          The workflow has disabled itself. Re-enable it with \`gh workflow enable oracle-a1.yml\` only if you want another attempt, for example after terminating the instance. Close this issue once you have logged in.
+          ${next} Close this issue once you have logged in.
           EOF
           )"
-          if gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" --assignee "$GITHUB_REPOSITORY_OWNER"; then
-            exit 0
+          err="$(mktemp)"
+          # The REST create is atomic: a 422 (unassignable login) creates nothing, so the retry cannot duplicate.
+          if url="$(gh api "repos/${GITHUB_REPOSITORY}/issues" -f title="$title" -f body="$body" -f "assignees[]=${ASSIGNEE}" --jq .html_url 2>"$err")"; then
+            echo "Opened ${url}"
+          elif grep -q 'HTTP 422' "$err" &&
+            url="$(gh api "repos/${GITHUB_REPOSITORY}/issues" -f title="$title" -f body="$body" --jq .html_url 2>"$err")"; then
+            echo "::warning::Could not assign ${ASSIGNEE}; opened ${url} unassigned (the @mention still notifies)."
+          else
+            echo "::warning::Could not open the announcement issue ($(head -n 1 "$err")). Check that Issues are enabled for this repository."
           fi
-          echo "::warning::Could not assign the announcement issue; opening it unassigned (the @mention still notifies)."
-          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" ||
-            echo "::warning::Could not open the announcement issue. Check that Issues are enabled for this repository."
 
       - name: Notify
         if: always() && steps.disable.outputs.already_disabled != 'true' && (steps.run.outputs.status == 'done' || steps.run.outputs.status == 'fatal' || failure())

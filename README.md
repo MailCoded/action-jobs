@@ -23,7 +23,7 @@ One tenancy, one instance, within the Free Tier rules. No account farming, no ke
 - Deliberate differences from the original spec, and the versions everything is pinned to, are
   recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
 
-**oracle-a1 in one paragraph.** Every 15 minutes a bounded run reads the Terraform state from OCI
+**oracle-a1 in one paragraph.** Every hour a bounded run reads the Terraform state from OCI
 Object Storage, asks OCI for a capacity report and, if there is a chance, runs `terraform apply` for
 a single A1 instance. "Out of host capacity" is a normal outcome and is retried on the next tick.
 Anything else stops loudly with a reason and a "What to fix" section in the job summary. On success
@@ -43,9 +43,12 @@ an Apprise notification. A scheduled run never destroys or replaces the instance
 A failure in an earlier step (for example `setup-oci` rejecting the key) is also red and notifies
 with the title `oracle-a1: failed`.
 
-**How you hear about it.** On `done`, the workflow opens the issue "oracle-a1: the A1 instance is
-ready", assigned to the repository owner and mentioning them. GitHub notifies you on the web and, with
-**Assigned** push notifications enabled in GitHub Mobile, on your phone. The issue links to the run;
+**How you hear about it.** When a run creates the instance, the workflow opens the issue
+"oracle-a1: the A1 instance is ready", assigned to and mentioning `ORACLE_A1_ASSIGNEE` (default: the
+repository owner; set it to your username when the repository belongs to an organization). GitHub
+notifies you on the web and, with the **Assignments** or **Direct mentions** push notifications
+enabled in GitHub Mobile (*Settings → Notifications*), on your phone. Later `done` runs, such as a
+reconcile after you re-enable the workflow, do not open another issue. The issue links to the run;
 the IP is only in the run summary. Red runs reach you through GitHub's default "failed workflows only"
 notification (*Settings → Notifications → Actions*). `APPRISE_URLS` adds ntfy, Telegram, email and
 so on for both. Retries never notify. Every reason and its fix is listed in
@@ -145,6 +148,7 @@ root in a shell where you have done `export TENANCY_OCID=ocid1.tenancy.oc1..xxxx
 | `ORACLE_A1_ENABLED` | variable | yes | must be `true` to run |
 | `OCI_REGION` | variable | no | default `ap-sydney-1`; must be the home region |
 | `OCI_STATE_BUCKET` | variable | yes | e.g. `freebie-hub-tfstate` |
+| `ORACLE_A1_ASSIGNEE` | variable | no | GitHub username that the success issue is assigned to; default the repository owner. **Set it if the repository belongs to an organization**, since an organization cannot be assigned |
 | `ORACLE_A1_OCPUS` / `ORACLE_A1_MEMORY_GB` | variable | no | defaults `2` / `12`. **Do not exceed 2 / 12**: that is the whole Always Free A1 allowance |
 
 Manual runs have two inputs: `capacity_check` (default on: gate each attempt on a capacity report)
@@ -159,7 +163,7 @@ next step, and a collapsed log tail the raw error.
 ### Runs show as "Skipped"
 
 `ORACLE_A1_ENABLED` is not `true`, so the job-level `if:` skips the job. No runner starts and no
-minutes are used, but a skipped run appears every 15 minutes. Set the variable to `true` to start,
+minutes are used, but a skipped run appears every hour. Set the variable to `true` to start,
 or disable the workflow in the *Actions* tab to silence it.
 
 ### `setup-oci` fails, or reason `auth`: PEM vs SSH key
@@ -252,7 +256,7 @@ GitHub disables scheduled workflows in public repositories after 60 days without
 GitHub's docs do not define "activity" (community reports say commits count). Re-enable it with
 `gh workflow enable oracle-a1.yml` or from the *Actions* tab. This repository deliberately does not
 make keepalive commits. GitHub schedules are best effort anyway: runs can be delayed or dropped,
-especially around the top of the hour, which is why the cron uses minutes 4, 19, 34 and 49. GitHub
+especially around the top of the hour, which is why the cron runs at minute 17 of every hour. GitHub
 sends its own failure emails for scheduled runs to whoever last changed the cron or re-enabled the
 workflow.
 
@@ -291,8 +295,9 @@ Always Free block storage.
 ### Private repository minutes
 
 In a public repository standard runners are free. In a private repository every run is billed against
-the free minutes (2,000 per month on GitHub Free), and at 96 runs a day those are gone in about a
-week. Keep the repository public; secrets stay encrypted and are never printed.
+the free minutes (2,000 per month on GitHub Free). Each run takes a little over a minute and is billed
+as 2 after rounding, so the hourly schedule alone uses about 1,500 minutes a month, before CI. Keep
+the repository public; secrets stay encrypted and are never printed.
 
 ### No public IP, or errors about tag namespaces
 

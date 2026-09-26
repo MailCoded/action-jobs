@@ -245,14 +245,36 @@ README quickstart creates the bucket before the policy, the reverse of SPEC §11
 
 **D20: success is announced with a GitHub issue.** GitHub's Actions notifications offer only
 "failed workflows only" or every run. The first misses the success, and the second would mean a
-notification every 15 minutes for the green `retry` runs. So after `done` (and the self-disable)
-the workflow opens the issue "oracle-a1: the A1 instance is ready", assigned to and mentioning the
-repository owner. Because the Actions bot assigns you, GitHub notifies you, including a push in
-GitHub Mobile. This needs `issues: write` in `oracle-a1.yml`, and nowhere else. The issue has no IP,
-only the run link. It is skipped when the workflow was already disabled (a queued run after a
-success), and a failure to open it only warns (`continue-on-error`). If assignment fails, the issue
-is opened unassigned and the @mention still notifies. Apprise remains the channel for non-GitHub
-destinations.
+notification for every hourly green `retry` run. So when a run
+reports `done`/`instance_created`, the workflow opens the issue "oracle-a1: the A1 instance is ready",
+assigned to and @mentioning `vars.ORACLE_A1_ASSIGNEE`. That defaults to the repository owner, which
+must be overridden for an organization-owned repository, because an organization cannot be assigned
+and mentioning one does not notify you. Because the Actions bot assigns and mentions you, GitHub
+notifies you, including a push in GitHub Mobile when those categories are enabled. This needs
+`issues: write` in `oracle-a1.yml`, and nowhere else. Details:
+- **Gating.** The step keys on `instance_created`, not on any `done`, so reconcile runs
+  (`instance_present`/`instance_updated`, e.g. a queued run after the success or a manual run after
+  a re-enable) never repeat it. It uses `always()`, so a cancellation right after the disable step
+  cannot swallow it.
+- **Content.** The issue has no IP, only the run link. Its wording depends on whether this run's
+  disable step actually succeeded.
+- **No duplicates.** It is created with one REST call (`POST /repos/{owner}/{repo}/issues`), which is
+  atomic. `gh issue create --assignee` creates the issue and only then assigns, and exits non-zero if
+  the assignment fails (cli/cli#14367), so a fallback would have opened a duplicate. A 422 (an
+  unassignable login) creates nothing and is retried once without the assignee; the @mention still
+  notifies. Any other error only warns (`continue-on-error`).
+
+Apprise remains the channel for non-GitHub destinations. Verified against the GitHub docs and the
+gh 2.100.0 source: no documented rule suppresses notifications for GITHUB_TOKEN-created content (the
+documented rule only stops such events from triggering workflow runs), and "assign" and "mention"
+are separate notification reasons and GitHub Mobile push categories. Unverified until the first
+success: that the push actually arrives.
+
+**D21: hourly schedule.** At the owner's request the cron is `17 * * * *` (once an hour), not
+SPEC §7.1's `4,19,34,49 * * * *`. That is fewer chances to catch freed capacity, in exchange for a
+quieter Actions history and less runner use (about 24 runs a day instead of 96). Minute 17 keeps
+clear of the top of the hour, when GitHub delays and drops scheduled runs most. Manual runs are
+unaffected, and the 30-minute job timeout still fits well inside the interval.
 
 **Verification beyond `validate`.** The Terraform module was also planned with the real
 `oracle/oci` 9.3.0 provider against a local mock of the ListImages API
