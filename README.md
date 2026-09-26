@@ -27,8 +27,9 @@ One tenancy, one instance, within the Free Tier rules. No account farming, no ke
 Object Storage, asks OCI for a capacity report and, if there is a chance, runs `terraform apply` for
 a single A1 instance. "Out of host capacity" is a normal outcome and is retried on the next tick.
 Anything else stops loudly with a reason and a "What to fix" section in the job summary. On success
-the summary shows the IP and SSH command, a notification goes out (if `APPRISE_URLS` is set), and
-the workflow disables itself. A scheduled run never destroys or replaces the instance.
+the summary shows the IP and SSH command, the workflow disables itself, opens an issue assigned to
+you (a GitHub notification, including a push in GitHub Mobile) and, if `APPRISE_URLS` is set, sends
+an Apprise notification. A scheduled run never destroys or replaces the instance.
 
 ### Outcomes
 
@@ -40,7 +41,14 @@ the workflow disables itself. A scheduled run never destroys or replaces the ins
 | 3 | `skipped` | green | no | not used by oracle-a1; with `ORACLE_A1_ENABLED` unset the whole job is skipped instead |
 
 A failure in an earlier step (for example `setup-oci` rejecting the key) is also red and notifies
-with the title `oracle-a1: failed`. Every reason and its fix is listed in
+with the title `oracle-a1: failed`.
+
+**How you hear about it.** On `done`, the workflow opens the issue "oracle-a1: the A1 instance is
+ready", assigned to the repository owner and mentioning them. GitHub notifies you on the web and, with
+**Assigned** push notifications enabled in GitHub Mobile, on your phone. The issue links to the run;
+the IP is only in the run summary. Red runs reach you through GitHub's default "failed workflows only"
+notification (*Settings → Notifications → Actions*). `APPRISE_URLS` adds ntfy, Telegram, email and
+so on for both. Retries never notify. Every reason and its fix is listed in
 [modules/oracle-a1/README.md](modules/oracle-a1/README.md#statuses-and-reasons).
 
 ## oracle-a1 quickstart
@@ -116,7 +124,8 @@ root in a shell where you have done `export TENANCY_OCID=ocid1.tenancy.oc1..xxxx
    the job summary. `retry (no_capacity)` means everything works and OCI simply has no capacity right
    now: leave it to the schedule. Anything red has a "What to fix" section.
 
-9. **After success:** the summary shows the IP and `ssh ubuntu@<ip>` (use `-i ~/.ssh/oracle-a1`).
+9. **After success:** you get the "oracle-a1: the A1 instance is ready" issue, and the run summary
+   shows the IP and `ssh ubuntu@<ip>` (use `-i ~/.ssh/oracle-a1`).
    The workflow is now disabled, manual runs included. Keep the VM doing something useful
    ([idle reclamation](#idle-reclamation)).
 
@@ -231,7 +240,9 @@ the next scheduled run continues once OCI finishes.
 ### The schedule stopped after success, and "Run workflow" is gone
 
 That is by design: after `done` the workflow runs `gh workflow disable oracle-a1.yml`, which disables
-the **whole** workflow, including manual dispatch. To run it again (for example after terminating the
+the **whole** workflow, including manual dispatch, and opens the announcement issue. A run that was
+already queued still starts afterwards; it finds the workflow disabled and stays quiet (no second
+issue or notification). To run it again (for example after terminating the
 instance): `gh workflow enable oracle-a1.yml`, or *Actions → oracle-a1 → Enable workflow*. The file
 must keep the name `oracle-a1.yml` on the default branch for this to work.
 
@@ -338,4 +349,5 @@ docs/                    MODULES.md, module-template/, DECISIONS.md
 - Third-party actions are pinned to full commit SHAs; Terraform, the provider, the OCI CLI and
   Apprise are pinned too.
 - A dedicated least-privilege user; a private, versioned state bucket; minimal workflow permissions
-  (`contents: read`, plus `actions: write` only for oracle-a1's self-disable).
+  (`contents: read`, plus, for oracle-a1 only, `actions: write` for the self-disable and
+  `issues: write` for the success announcement).

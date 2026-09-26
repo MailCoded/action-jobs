@@ -17,6 +17,7 @@ on:
 permissions:
   contents: read
   actions: write
+  issues: write
 
 concurrency:
   group: oracle-a1
@@ -99,6 +100,31 @@ jobs:
           else
             echo "::warning::Could not disable the oracle-a1 workflow. Disable it manually under Actions to stop polling."
           fi
+
+      - name: Open an issue announcing the instance
+        if: steps.run.outputs.exit_code == '0' && steps.disable.outputs.already_disabled != 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ steps.run.outputs.reason }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # Assigned and mentioned by the Actions bot, so the owner gets a GitHub (Mobile) notification.
+          title="oracle-a1: the A1 instance is ready"
+          body="$(cat <<EOF
+          @${GITHUB_REPOSITORY_OWNER} the oracle-a1 workflow finished with \`done\` (\`${REASON}\`): the Always Free A1 instance is up.
+
+          The public IP and the SSH command are in the job summary of the run: ${RUN_URL}
+
+          The workflow has disabled itself. Re-enable it with \`gh workflow enable oracle-a1.yml\` only if you want another attempt, for example after terminating the instance. Close this issue once you have logged in.
+          EOF
+          )"
+          if gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" --assignee "$GITHUB_REPOSITORY_OWNER"; then
+            exit 0
+          fi
+          echo "::warning::Could not assign the announcement issue; opening it unassigned (the @mention still notifies)."
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" ||
+            echo "::warning::Could not open the announcement issue. Check that Issues are enabled for this repository."
 
       - name: Notify
         if: always() && steps.disable.outputs.already_disabled != 'true' && (steps.run.outputs.status == 'done' || steps.run.outputs.status == 'fatal' || failure())

@@ -243,6 +243,17 @@ surface as `BucketNotFound` (reported as `auth`). The script also prints the buc
 compartment, which fills the `<bucket-location>` placeholder in the IAM policy. For that reason the
 README quickstart creates the bucket before the policy, the reverse of SPEC §11.
 
+**D20: success is announced with a GitHub issue.** GitHub's Actions notifications offer only
+"failed workflows only" or every run. The first misses the success, and the second would mean a
+notification every 15 minutes for the green `retry` runs. So after `done` (and the self-disable)
+the workflow opens the issue "oracle-a1: the A1 instance is ready", assigned to and mentioning the
+repository owner. Because the Actions bot assigns you, GitHub notifies you, including a push in
+GitHub Mobile. This needs `issues: write` in `oracle-a1.yml`, and nowhere else. The issue has no IP,
+only the run link. It is skipped when the workflow was already disabled (a queued run after a
+success), and a failure to open it only warns (`continue-on-error`). If assignment fails, the issue
+is opened unassigned and the @mention still notifies. Apprise remains the channel for non-GitHub
+destinations.
+
 **Verification beyond `validate`.** The Terraform module was also planned with the real
 `oracle/oci` 9.3.0 provider against a local mock of the ListImages API
 (`CLIENT_HOST_OVERRIDES`). The newest image in the mock was a Minimal build: it was skipped and the
