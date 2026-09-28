@@ -12,8 +12,8 @@ on:
         type: boolean
         default: false
   schedule:
-    # Once an hour, off the top of the hour, when GitHub delays and drops scheduled runs most.
-    - cron: "17 * * * *"
+    # Every 15 minutes, avoiding minute 0, when GitHub delays and drops scheduled runs most.
+    - cron: "4,19,34,49 * * * *"
 
 permissions:
   contents: read

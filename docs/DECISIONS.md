@@ -245,7 +245,7 @@ README quickstart creates the bucket before the policy, the reverse of SPEC §11
 
 **D20: success is announced with a GitHub issue.** GitHub's Actions notifications offer only
 "failed workflows only" or every run. The first misses the success, and the second would mean a
-notification for every hourly green `retry` run. So when a run
+notification for every green `retry` run, 96 a day. So when a run
 reports `done`/`instance_created`, the workflow opens the issue "oracle-a1: the A1 instance is ready",
 assigned to and @mentioning `vars.ORACLE_A1_ASSIGNEE`. That defaults to the repository owner, which
 must be overridden for an organization-owned repository, because an organization cannot be assigned
@@ -270,11 +270,14 @@ documented rule only stops such events from triggering workflow runs), and "assi
 are separate notification reasons and GitHub Mobile push categories. Unverified until the first
 success: that the push actually arrives.
 
-**D21: hourly schedule.** At the owner's request the cron is `17 * * * *` (once an hour), not
-SPEC §7.1's `4,19,34,49 * * * *`. That is fewer chances to catch freed capacity, in exchange for a
-quieter Actions history and less runner use (about 24 runs a day instead of 96). Minute 17 keeps
-clear of the top of the hour, when GitHub delays and drops scheduled runs most. Manual runs are
-unaffected, and the 30-minute job timeout still fits well inside the interval.
+**D21: schedule cadence.** The cron is SPEC §7.1's `4,19,34,49 * * * *` (every 15 minutes, avoiding
+minute 0). For one day (2026-09-26/27) it was hourly (`17 * * * *`) at the owner's request. What
+happened then shows how best-effort GitHub's scheduler is for this repository: after the move to the
+MailCoded organization, **no** scheduled run fired until the schedule was re-registered (disable and
+re-enable the workflow, then push a change to the `schedule:` block). After that, only 5 of about 24
+hourly ticks produced a run in 24 hours, each 45 to 60 minutes late. The 15-minute cron was restored
+to give the scheduler more chances. If scheduled runs stop entirely again (for example after another
+transfer or rename), repeat the re-registration.
 
 **Verification beyond `validate`.** The Terraform module was also planned with the real
 `oracle/oci` 9.3.0 provider against a local mock of the ListImages API
