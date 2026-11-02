@@ -2,7 +2,7 @@
 
 GitHub's scheduler starts only a handful of `oracle-a1`'s cron ticks: 3 to 8 runs a day, about 5 on
 average, whether the cron says every 15 or every 5 minutes. This Worker takes over with a
-Cloudflare Cron Trigger that calls GitHub's workflow-dispatch API every 5 minutes. Background and
+Cloudflare Cron Trigger that calls GitHub's workflow-dispatch API every 10 minutes. Background and
 measurements: [DECISIONS.md D22](../../docs/DECISIONS.md).
 
 Every tick it:
@@ -34,7 +34,7 @@ apart (any fault domain, then `FAULT-DOMAIN-1..3`): about 1,150 attempts a day a
 
    Ticks before the secret exists fail with `GITHUB_TOKEN is not set` and change nothing.
 3. **Check.** A new Cron Trigger can take up to 15 minutes to start. Then the *Actions* tab shows
-   `oracle-a1` runs with the event `workflow_dispatch` every 5 minutes. In the Cloudflare
+   `oracle-a1` runs with the event `workflow_dispatch` every 10 minutes. In the Cloudflare
    dashboard, *Workers & Pages → oracle-a1-trigger → Logs* shows each tick: the run URL, or why it
    did not dispatch.
 

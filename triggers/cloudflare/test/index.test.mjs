@@ -28,7 +28,7 @@ function stubFetch(...replies) {
 }
 
 function run(env = ENV) {
-  return worker.scheduled({ cron: "*/5 * * * *", scheduledTime: Date.now() }, env, { waitUntil() {} });
+  return worker.scheduled({ cron: "*/10 * * * *", scheduledTime: Date.now() }, env, { waitUntil() {} });
 }
 
 test("dispatches an active workflow with string inputs", async (t) => {

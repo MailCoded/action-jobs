@@ -23,7 +23,7 @@ One tenancy, one instance, within the Free Tier rules. No account farming, no ke
 - Deliberate differences from the original spec, and the versions everything is pinned to, are
   recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
 
-**oracle-a1 in one paragraph.** Every 5 minutes a [Cloudflare Worker](triggers/cloudflare/README.md)
+**oracle-a1 in one paragraph.** Every 10 minutes a [Cloudflare Worker](triggers/cloudflare/README.md)
 starts a bounded run, which reads the Terraform state from OCI Object Storage and makes up to four
 `terraform apply` attempts for a single A1 instance (any fault domain, then each of the three).
 GitHub's own cron is only a fallback: it fires a few times a day, and its runs skip the launch when
@@ -131,7 +131,7 @@ root in a shell where you have done `export TENANCY_OCID=ocid1.tenancy.oc1..xxxx
    now: leave it to the schedule. Anything red has a "What to fix" section.
 
 9. **Deploy the [Cloudflare trigger](triggers/cloudflare/README.md).** GitHub's own schedule
-   starts only a few runs a day; the trigger dispatches one every 5 minutes.
+   starts only a few runs a day; the trigger dispatches one every 10 minutes.
 
 10. **After success:** you get the "oracle-a1: the A1 instance is ready" issue, and the run summary
     shows the IP and `ssh ubuntu@<ip>` (use `-i ~/.ssh/oracle-a1`).
@@ -348,7 +348,7 @@ in progress. The test suite runs offline with shims: `bats tests/`.
   workflows/ci.yml       lint and tests; never touches OCI
 lib/common.sh            shared helpers: exit codes, logging, outputs, job summary
 modules/oracle-a1/       run.sh, lib/classify.sh, scripts/check-home-region.sh, terraform/
-triggers/cloudflare/     Cloudflare Worker that dispatches oracle-a1 every 5 minutes
+triggers/cloudflare/     Cloudflare Worker that dispatches oracle-a1 every 10 minutes
 bootstrap/oracle/        create-state-bucket.sh, iam-policy.txt (one-off, run with an admin profile)
 tests/                   bats tests, shims and fixture logs
 docs/                    MODULES.md, module-template/, DECISIONS.md
