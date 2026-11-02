@@ -18,14 +18,17 @@ One tenancy, one instance, within the Free Tier rules. No account farming, no ke
   [`setup-oci`](.github/actions/setup-oci) (pinned OCI CLI, credentials, auth probe) and
   [`notify`](.github/actions/notify) (Apprise; does nothing without `APPRISE_URLS`).
 - Every module is **off** until its repository variable `<NAME>_ENABLED` is `true`.
-- `ci.yml` runs `terraform fmt`/`validate`, ShellCheck, actionlint and the bats tests on every
-  push and pull request. It never talks to OCI.
+- `ci.yml` runs `terraform fmt`/`validate`, ShellCheck, actionlint, the bats tests and the
+  Cloudflare trigger's tests on every push and pull request. It never talks to OCI.
 - Deliberate differences from the original spec, and the versions everything is pinned to, are
   recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
 
-**oracle-a1 in one paragraph.** Every 15 minutes a bounded run reads the Terraform state from OCI
-Object Storage, asks OCI for a capacity report and, if there is a chance, runs `terraform apply` for
-a single A1 instance. "Out of host capacity" is a normal outcome and is retried on the next tick.
+**oracle-a1 in one paragraph.** Every 5 minutes a [Cloudflare Worker](triggers/cloudflare/README.md)
+starts a bounded run, which reads the Terraform state from OCI Object Storage and makes up to four
+`terraform apply` attempts for a single A1 instance (any fault domain, then each of the three).
+GitHub's own cron is only a fallback: it fires a few times a day, and its runs skip the launch when
+OCI's capacity report is negative. "Out of host capacity" is a normal outcome and is retried on the
+next tick.
 Anything else stops loudly with a reason and a "What to fix" section in the job summary. On success
 the summary shows the IP and SSH command, the workflow disables itself, opens an issue assigned to
 you (a GitHub notification, including a push in GitHub Mobile) and, if `APPRISE_URLS` is set, sends
@@ -127,10 +130,13 @@ root in a shell where you have done `export TENANCY_OCID=ocid1.tenancy.oc1..xxxx
    the job summary. `retry (no_capacity)` means everything works and OCI simply has no capacity right
    now: leave it to the schedule. Anything red has a "What to fix" section.
 
-9. **After success:** you get the "oracle-a1: the A1 instance is ready" issue, and the run summary
-   shows the IP and `ssh ubuntu@<ip>` (use `-i ~/.ssh/oracle-a1`).
-   The workflow is now disabled, manual runs included. Keep the VM doing something useful
-   ([idle reclamation](#idle-reclamation)).
+9. **Deploy the [Cloudflare trigger](triggers/cloudflare/README.md).** GitHub's own schedule
+   starts only a few runs a day; the trigger dispatches one every 5 minutes.
+
+10. **After success:** you get the "oracle-a1: the A1 instance is ready" issue, and the run summary
+    shows the IP and `ssh ubuntu@<ip>` (use `-i ~/.ssh/oracle-a1`).
+    The workflow is now disabled, manual runs included. Keep the VM doing something useful
+    ([idle reclamation](#idle-reclamation)).
 
 ### Secrets and variables
 
@@ -163,7 +169,7 @@ next step, and a collapsed log tail the raw error.
 ### Runs show as "Skipped"
 
 `ORACLE_A1_ENABLED` is not `true`, so the job-level `if:` skips the job. No runner starts and no
-minutes are used, but a skipped run appears every 15 minutes. Set the variable to `true` to start,
+minutes are used, but a skipped run appears on every tick. Set the variable to `true` to start,
 or disable the workflow in the *Actions* tab to silence it.
 
 ### `setup-oci` fails, or reason `auth`: PEM vs SSH key
@@ -255,10 +261,12 @@ must keep the name `oracle-a1.yml` on the default branch for this to work.
 GitHub disables scheduled workflows in public repositories after 60 days without repository activity.
 GitHub's docs do not define "activity" (community reports say commits count). Re-enable it with
 `gh workflow enable oracle-a1.yml` or from the *Actions* tab. This repository deliberately does not
-make keepalive commits. GitHub schedules are best effort anyway: runs can be delayed or dropped,
-especially around the top of the hour, which is why the cron uses minutes 4, 19, 34 and 49. GitHub
-sends its own failure emails for scheduled runs to whoever last changed the cron or re-enabled the
-workflow.
+make keepalive commits. The disabled workflow also stops the
+[Cloudflare trigger](triggers/cloudflare/README.md), which dispatches only while the workflow is
+active. GitHub schedules are best effort anyway: here only 3 to 8 ticks a day produce a run, whatever
+the cron says, which is why the trigger exists. GitHub sends its own failure emails for scheduled
+runs to whoever last changed the cron or re-enabled the workflow, and for dispatched runs to the
+owner of the trigger's token.
 
 ### Idle reclamation
 
@@ -295,9 +303,9 @@ Always Free block storage.
 ### Private repository minutes
 
 In a public repository standard runners are free. In a private repository every run is billed against
-the free minutes (2,000 per month on GitHub Free). Each run takes a little over a minute and is billed
-as 2 after rounding, so the 15-minute schedule (96 runs a day) would use them up in about ten days. Keep
-the repository public; secrets stay encrypted and are never printed.
+the free minutes (2,000 per month on GitHub Free), each rounded up to whole minutes. The Cloudflare
+trigger's 288 runs a day of 2 to 3 minutes would use them up in about two days. Keep the repository
+public; secrets stay encrypted and are never printed.
 
 ### No public IP, or errors about tag namespaces
 
@@ -340,6 +348,7 @@ in progress. The test suite runs offline with shims: `bats tests/`.
   workflows/ci.yml       lint and tests; never touches OCI
 lib/common.sh            shared helpers: exit codes, logging, outputs, job summary
 modules/oracle-a1/       run.sh, lib/classify.sh, scripts/check-home-region.sh, terraform/
+triggers/cloudflare/     Cloudflare Worker that dispatches oracle-a1 every 5 minutes
 bootstrap/oracle/        create-state-bucket.sh, iam-policy.txt (one-off, run with an admin profile)
 tests/                   bats tests, shims and fixture logs
 docs/                    MODULES.md, module-template/, DECISIONS.md
@@ -351,6 +360,8 @@ docs/                    MODULES.md, module-template/, DECISIONS.md
   committed.
 - Secrets reach the job only as GitHub secrets and are never printed; missing settings are reported
   by name.
+- The Cloudflare trigger holds a single fine-grained token, limited to this repository's Actions. It
+  never sees OCI credentials.
 - Third-party actions are pinned to full commit SHAs; Terraform, the provider, the OCI CLI and
   Apprise are pinned too.
 - A dedicated least-privilege user; a private, versioned state bucket; minimal workflow permissions

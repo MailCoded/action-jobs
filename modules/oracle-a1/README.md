@@ -85,7 +85,7 @@ while one is present. Per-attempt logs go to a directory under
 | `OCI_SUBNET_OCID` | secret | `TF_VAR_existing_subnet_id` |
 | `ORACLE_A1_SSH_PUBLIC_KEY` | secret | `TF_VAR_ssh_public_key` |
 | `ORACLE_A1_OCPUS` / `ORACLE_A1_MEMORY_GB` | variables | `OCPUS` / `MEMORY_GB` (defaults 2 / 12) |
-| dispatch inputs `capacity_check` / `try_fault_domains` | inputs | `CAPACITY_CHECK` / `TRY_FAULT_DOMAINS` (scheduled runs: `true` / `false`) |
+| dispatch inputs `capacity_check` / `try_fault_domains` | inputs | `CAPACITY_CHECK` / `TRY_FAULT_DOMAINS` (scheduled runs: `true` / `false`; the [Cloudflare trigger](../../triggers/cloudflare/README.md) sends `false` / `true`) |
 | `ORACLE_A1_ENABLED` | variable | the job's `if:`; anything but `true` skips the job |
 | `APPRISE_URLS` | secret | the `notify` action |
 

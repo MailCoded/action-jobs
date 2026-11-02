@@ -279,6 +279,21 @@ hourly ticks produced a run in 24 hours, each 45 to 60 minutes late. The 15-minu
 to give the scheduler more chances. If scheduled runs stop entirely again (for example after another
 transfer or rename), repeat the re-registration.
 
+**D22: a Cloudflare Worker dispatches the workflow.** Measured with the runs API on 2026-11-02:
+GitHub started 3 to 8 scheduled runs a day (about 5 on average), both before and after the cron
+changed from every 15 to every 5 minutes (2026-10-27). And all 199 runs from 2026-09-26 to
+2026-11-01, manual ones included, ended `retry (no_capacity)` at the capacity report without a
+single launch: `ap-sydney-1` has one AD, so a negative report skips the only placement (D9).
+[`triggers/cloudflare`](../triggers/cloudflare/README.md) is a Worker whose Cron Trigger
+(`*/5 * * * *`) calls the workflow-dispatch API with `capacity_check=false` (SPEC §3.5: the apply
+result is authoritative) and `try_fault_domains=true` (four attempts per run, 20 s apart). It reads
+the workflow first and dispatches only while its state is `active`, so the self-disable after a
+success stops it too. Its token is a fine-grained PAT for this repository with Actions read and
+write; it never sees OCI credentials. The `schedule:` block stays as a fallback, and its runs still
+gate on the report. Verified: unit tests with a stubbed `fetch`, and `wrangler dev --test-scheduled`
+(wrangler 4.93.0), whose request with a dummy token reached GitHub and got `401 Bad credentials`.
+The `compatibility_date` is 2026-05-25, the newest that wrangler 4.93.0's local runtime accepts.
+
 **Verification beyond `validate`.** The Terraform module was also planned with the real
 `oracle/oci` 9.3.0 provider against a local mock of the ListImages API
 (`CLIENT_HOST_OVERRIDES`). The newest image in the mock was a Minimal build: it was skipped and the
